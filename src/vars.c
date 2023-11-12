@@ -20,6 +20,7 @@ static sh_var_vector *env_vars = NULL;
 static uint32_t export_count = 0;
 
 char *sh_var_to_string(const sh_var *var);
+sh_var *find_sh_var(const char *key, uint32_t *index);
 
 void vars_import(const char **env) {
 	// Reset env vars if populated
@@ -33,10 +34,12 @@ void vars_import(const char **env) {
 		char *copy = strdup(*env);
 
 		sh_var var = {
-			.key = strtok(copy, "="),
-			.value = strtok(NULL, "="),
+			.key = strdup(strtok(copy, "=")),
+			.value = strdup(strtok(NULL, "=")),
 			.is_export = 1
 		};
+
+		free(copy);
 		vec_push(env_vars, &var);
 
 		env++;
@@ -67,11 +70,52 @@ char **vars_export(void) {
 	return env;
 }
 
-// TODO: implement
-int vars_set(const char *key, const char *value);
-char *vars_get(const char *key);
-int vars_delete(const char *key);
-int vars_set_export(const char *key);
+void vars_set(const char *key, const char *value) {
+	sh_var *find_res = find_sh_var(key, NULL);
+
+	if (find_res == NULL) {
+		// Create new variable
+		sh_var new_var = {
+			.key = strdup(key),
+			.value = strdup(value),
+			.is_export = 0
+		};
+		vec_push(env_vars, &new_var);
+	} else {
+		// Update existing
+		free(find_res->value);
+		find_res->value = strdup(value);
+	}
+}
+
+const char *vars_get(const char *key) {
+	sh_var *find_res = find_sh_var(key, NULL);
+	if (find_res == NULL) {
+		return NULL;
+	}
+
+	return find_res->value;
+}
+
+int vars_delete(const char *key) {
+	uint32_t index;
+	sh_var *find_res = find_sh_var(key, &index);
+	if (find_res == NULL) {
+		return -1;
+	}
+
+	return vec_pop(env_vars, index, NULL);
+}
+
+int vars_set_export(const char *key) {
+	sh_var *find_res = find_sh_var(key, NULL);
+	if (find_res == NULL) {
+		return -1;
+	}
+
+	find_res->is_export = 1;
+	return 0;
+}
 
 void vars_print_all(int export_flag) {
 	if (env_vars == NULL) {
@@ -113,4 +157,25 @@ char *sh_var_to_string(const sh_var *var) {
 	}
 
 	return str;
+}
+
+/**
+ * @brief Find shell variable entry by name.
+ *
+ * @param[in] key - Variable name.
+ * @param[out] index - If not NULL and item was found, places index here.
+ * @return Shell variable structure; NULL on error.
+ */
+sh_var *find_sh_var(const char *key, uint32_t *index) {
+	for (uint32_t i = 0; i < env_vars->count; i++) {
+		sh_var *entry = vec_at(env_vars, i);
+		if (strcmp(entry->key, key) == 0) {
+			if (index != NULL) {
+				*index = i;
+			}
+			return entry;
+		}
+	}
+
+	return NULL;
 }

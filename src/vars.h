@@ -20,9 +20,8 @@ char **vars_export(void);
  *
  * @param[in] key - Variable name.
  * @param[in] value - New variable value.
- * @return 0 on success, -1 on failure.
  */
-int vars_set(const char *key, const char *value);
+void vars_set(const char *key, const char *value);
 
 /**
  * @brief Get value of an environment variable.
@@ -30,7 +29,7 @@ int vars_set(const char *key, const char *value);
  * @param[in] key - Variable name.
  * @return Variable value; NULL on error.
  */
-char *vars_get(const char *key);
+const char *vars_get(const char *key);
 
 /**
  * @brief Delete environment variable.
