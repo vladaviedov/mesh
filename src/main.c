@@ -1,19 +1,33 @@
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "vector.h"
 #include "vars.h"
+#include "parser.h"
 
 int main() {
 	extern const char **environ;
 	vars_import(environ);
-	vars_print_all(1);
 
-	vars_set("X", "5");
-	vars_set("Y", "6");
+	char buffer[1024] = {0};
+	uint32_t index = 0;
 
-	vars_print_all(0);
+	printf("$ ");
+	int ch;
+	while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
+		buffer[index] = ch;
+		index++;
+	}
 
-	printf("%s\n", vars_get("X"));
-	printf("%s\n", vars_get("Y"));
+	str_vec *parsed_str = parser_split(buffer);
+	for (uint32_t i = 0; i < parsed_str->count; i++) {
+		printf("%u: %s\n", i, *(char **)vec_at(parsed_str, i));
+	}
+
+	for (uint32_t i = 0; i < parsed_str->count; i++) {
+		free(*(char **)vec_at(parsed_str, i));
+	}
+	vec_free(parsed_str);
 
 	return 0;
 }

@@ -10,6 +10,8 @@ typedef struct {
 	uint32_t _alloc_count;
 } vector;
 
+typedef vector str_vec;
+
 /**
  * @brief Create new vector.
  *
