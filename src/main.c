@@ -19,12 +19,14 @@ int main() {
 		index++;
 	}
 
-	str_vec *parsed_str = parser_split(buffer);
+	char *subbed_str = parser_sub(buffer);
+	str_vec *parsed_str = parser_split(subbed_str);
 	for (uint32_t i = 0; i < parsed_str->count; i++) {
 		printf("%u: %s\n", i, *(char **)vec_at(parsed_str, i));
 	}
 
 	vec_free_with_elements(parsed_str);
+	free(subbed_str);
 
 	return 0;
 }
