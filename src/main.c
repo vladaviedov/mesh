@@ -24,10 +24,7 @@ int main() {
 		printf("%u: %s\n", i, *(char **)vec_at(parsed_str, i));
 	}
 
-	for (uint32_t i = 0; i < parsed_str->count; i++) {
-		free(*(char **)vec_at(parsed_str, i));
-	}
-	vec_free(parsed_str);
+	vec_free_with_elements(parsed_str);
 
 	return 0;
 }

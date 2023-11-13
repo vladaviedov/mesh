@@ -35,6 +35,19 @@ void vec_free(vector *vec) {
 	free(vec);
 }
 
+void vec_free_with_elements(vector *vec) {
+	if (vec == NULL) {
+		return;
+	}
+
+	// Free all elements
+	for (uint32_t i = 0; i < vec->count; i++) {
+		free(*(void **)ptr_at(vec, i));
+	}
+
+	vec_free(vec);
+}
+
 void vec_push(vector *vec, const void *value) {
 	if (vec == NULL) {
 		return;

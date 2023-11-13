@@ -39,6 +39,13 @@ vector *vec_new_with_size(uint64_t type_size, uint32_t vec_size);
 void vec_free(vector *vec);
 
 /**
+ * @brief Delete vector but free all its elements first.
+ *
+ * @param[in] vec - Vector object.
+ */
+void vec_free_with_elements(vector *vec);
+
+/**
  * @brief Add new element to the end.
  *
  * @param[in/out] vec - Vector object.
