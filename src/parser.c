@@ -7,33 +7,36 @@
 
 #define TEMP_BUF_LEN 1024
 
-typedef enum {
-	QUOTE_NONE,
-	QUOTE_SINGLE,
-	QUOTE_DOUBLE
-} quote_st;
-
 // Buffer used for parsing
 static char temp[TEMP_BUF_LEN];
-#define clear_temp() memset(temp, 0, TEMP_BUF_LEN); temp_index = 0
+#define clear_temp() memset(temp, 0, TEMP_BUF_LEN)
+#define add_temp(ch, ctr) { \
+	temp[ctr] = ch; \
+	ctr++; \
+}
+#define is_blank(x) (x == ' ' || x == '\t' || x == '\0')
 
 str_vec *parser_split(char *input_string) {
 	str_vec *vec = vec_new(sizeof(char *));
 
 	// Setup
-	uint32_t temp_index = 0;
 	clear_temp();
-	quote_st quote = QUOTE_NONE;
+	uint32_t temp_index = 0;
+	int quote = 0;
 	int empty = 0;
 	char *ptr_buf = NULL;
 
 	char ch;
 	while ((ch = *input_string++) != '\0') {
 		switch (ch)	 {
+			// Escaped quotes
+			case '\\':
+				ch = *input_string++;
+				add_temp(ch, temp_index);
 			// Separating characters
 			case ' ': // fallthrough
 			case '\t':
-				if (quote == QUOTE_NONE && !empty) {
+				if (!quote && !empty) {
 					// Insert string or empty string
 					ptr_buf = temp_index == 0
 						? strdup("")
@@ -42,55 +45,24 @@ str_vec *parser_split(char *input_string) {
 					clear_temp();
 					empty = 1;
 				} else if (!empty) {
-					temp[temp_index] = ch;
-					temp_index++;
+					add_temp(ch, temp_index);
 				}
 				break;
-			// Quotes
-			case '\'':
-				switch (quote) {
-					case QUOTE_NONE:
-						empty = 0;
-						quote = QUOTE_SINGLE;
-						break;
-					case QUOTE_SINGLE:
-						quote = QUOTE_NONE;
-						break;
-					case QUOTE_DOUBLE:
-						temp[temp_index] = ch;
-						temp_index++;
-						break;
-				}
-				break;
+			// Quotes - only double present here
 			case '\"':
-				switch (quote) {
-					case QUOTE_NONE:
-						empty = 0;
-						quote = QUOTE_DOUBLE;
-						break;
-					case QUOTE_DOUBLE:
-						quote = QUOTE_NONE;
-						break;
-					case QUOTE_SINGLE:
-						temp[temp_index] = ch;
-						temp_index++;
-						break;
-				}
+				quote = !quote;
+				empty = 0;
 				break;
 			// Escaped & normal characters
-			case '\\':
-				ch = *input_string++;
-				// fallthrough
 			default:
 				empty = 0;
-				temp[temp_index] = ch;
-				temp_index++;
+				add_temp(ch, temp_index);
 				break;
 		}
 	}
 
 	if (!empty) {
-		if (quote != QUOTE_NONE) {
+		if (quote) {
 			return NULL;
 			// TODO: report error
 		}
@@ -102,4 +74,48 @@ str_vec *parser_split(char *input_string) {
 	}
 
 	return vec;
+}
+
+char *parser_sub(char *input_string) {
+	if (input_string == NULL) {
+		return NULL;
+	}
+
+	clear_temp();
+	uint32_t temp_index = 0;
+	int noexpand = 0;
+	int comment = 0;
+	int quotes = 0;
+
+	char ch;
+	char prev = '\0';
+	while (!comment && (ch = *input_string++) != '\0') {
+		switch (ch) {
+			case '\\':
+				// TODO: implement
+				break;
+			case '$':
+				// TODO: implement
+				break;
+			case '\'':
+				noexpand = !noexpand;
+				// fallthrough
+			case '\"':
+				quotes = !quotes;
+				add_temp('\"', temp_index);
+				break;
+			case '#':
+				if (!quotes && is_blank(prev)) {
+					comment = 1;
+					break;
+				}
+				// fallthrough
+			default:
+				add_temp(ch, temp_index);
+				break;
+
+		}
+	}
+
+	return strdup(temp);
 }
