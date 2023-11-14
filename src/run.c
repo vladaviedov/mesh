@@ -4,16 +4,21 @@
 #include <stdio.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
 
 #include "vars.h"
+#include "parser.h"
 
 int exec_prog(str_vec *args);
 
 int run_dispatch(str_vec *args) {
-	// TODO: run pure assignment
+	// Shell assignments
+	if (is_pure_assign(args)) {
+		
+	}
 	
 	// TODO: run built-in commands
 	
@@ -22,6 +27,30 @@ int run_dispatch(str_vec *args) {
 	// Exec program
 	return exec_prog(args);
 }
+
+/**
+ * @brief Assign requested variables.
+ *
+ * @param[in] args - Argument vector.
+ * @return 0 on success; -1 on failure.
+ */
+/* int pure_assign(str_vec *args, int export_flag) { */
+/* 	for (uint32_t i = 0; i < args->count; i++) { */
+/* 		char *token = *(char **)vec_at(args, i); */
+
+/* 		char *key = strtok(token, "="); */
+/* 		char *value = strtok(NULL, "="); */
+
+/* 		vars_set(key, value); */
+/* 		if (export_flag) { */
+/* 			if (vars_set_export(key) < 0) { */
+/* 				return -1; */
+/* 			} */
+/* 		} */
+/* 	} */
+
+/* 	return 0; */
+/* } */
 
 /**
  * @brief Run regular program.

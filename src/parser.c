@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "vector.h"
@@ -156,4 +157,46 @@ char *parser_sub(char *input_string) {
 	}
 
 	return strdup(temp);
+}
+
+int is_valid_var_name(const char *name) {
+	// First chracter cannot be a number
+	if (isdigit(*name)) {
+		return 0;
+	}
+
+	// All characters must be alphanumeric
+	char ch;
+	while ((ch = *name++) != '\0') {
+		if (!isalnum(ch)) {
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int is_assign(const char *token) {
+	char *equal_sign = strchr(token, '=');
+
+	// Equal sign required
+	if (equal_sign == NULL) {
+		return 0;
+	}
+
+	// Check key
+	size_t key_len = equal_sign - token;
+	char key[key_len + 1];
+	strncpy(key, token, key_len);
+	return is_valid_var_name(key);
+}
+
+int is_pure_assign(const str_vec *expression) {
+	for (uint32_t i = 0; i < expression->count; i++) {
+		if (!is_assign(vec_at(expression, i))) {
+			return 0;
+		}
+	}
+
+	return 1;
 }
