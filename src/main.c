@@ -4,6 +4,7 @@
 #include "vector.h"
 #include "vars.h"
 #include "parser.h"
+#include "run.h"
 
 int main() {
 	extern const char **environ;
@@ -24,6 +25,8 @@ int main() {
 	for (uint32_t i = 0; i < parsed_str->count; i++) {
 		printf("%u: %s\n", i, *(char **)vec_at(parsed_str, i));
 	}
+
+	run_dispatch(parsed_str);
 
 	vec_free_with_elements(parsed_str);
 	free(subbed_str);
