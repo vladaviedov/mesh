@@ -11,46 +11,27 @@
 
 #include "vars.h"
 #include "parser.h"
+#include "builtins.h"
 
 int exec_prog(str_vec *args);
 
 int run_dispatch(str_vec *args) {
 	// Shell assignments
 	if (is_pure_assign(args)) {
-		
+		return pure_assign(args, 0);
 	}
 	
-	// TODO: run built-in commands
+	// Builtins
+	int code = run_builtin(args);
+	if (code >= 0) {
+		return code;
+	}
 	
 	// TODO: meta commands
 	
 	// Exec program
 	return exec_prog(args);
 }
-
-/**
- * @brief Assign requested variables.
- *
- * @param[in] args - Argument vector.
- * @return 0 on success; -1 on failure.
- */
-/* int pure_assign(str_vec *args, int export_flag) { */
-/* 	for (uint32_t i = 0; i < args->count; i++) { */
-/* 		char *token = *(char **)vec_at(args, i); */
-
-/* 		char *key = strtok(token, "="); */
-/* 		char *value = strtok(NULL, "="); */
-
-/* 		vars_set(key, value); */
-/* 		if (export_flag) { */
-/* 			if (vars_set_export(key) < 0) { */
-/* 				return -1; */
-/* 			} */
-/* 		} */
-/* 	} */
-
-/* 	return 0; */
-/* } */
 
 /**
  * @brief Run regular program.

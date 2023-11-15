@@ -3,15 +3,24 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "vector.h"
 #include "vars.h"
 #include "parser.h"
 #include "run.h"
 
+#define PS1_ROOT "# "
+#define PS1_USER "$ "
+
+#define PID_STR_MAX_LEN 32
+
+void set_vars(void);
+
 int main() {
 	extern const char **environ;
 	vars_import(environ);
+	set_vars();
 
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
@@ -23,7 +32,7 @@ int main() {
 		memset(buffer, 0, 1024);
 		index = 0;
 
-		printf("$ ");
+		printf("%s", vars_get("PS1"));
 		int ch;
 		while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
 			buffer[index] = ch;
@@ -32,9 +41,6 @@ int main() {
 
 		char *subbed_str = parser_sub(buffer);
 		str_vec *parsed_str = parser_split(subbed_str);
-		for (uint32_t i = 0; i < parsed_str->count; i++) {
-			printf("%u: %s\n", i, *(char **)vec_at(parsed_str, i));
-		}
 
 		run_dispatch(parsed_str);
 		vec_free_with_elements(parsed_str);
@@ -42,4 +48,23 @@ int main() {
 	}
 
 	return 0;
+}
+
+void set_vars(void) {
+	// Prompts
+	if (vars_get("PS1") == NULL) {
+		char *ps1 = (getuid() == 0) ? PS1_ROOT : PS1_USER;
+		vars_set("PS1", ps1);
+	}
+
+	// PID
+	pid_t pid = getpid();
+	char pid_str[PID_STR_MAX_LEN];
+	snprintf(pid_str, PID_STR_MAX_LEN, "%d", pid);
+	vars_set("$", pid_str);
+	
+	// PWD
+	char *pwd = getcwd(NULL, 0);
+	vars_set("PWD", pwd);
+	free(pwd);
 }
