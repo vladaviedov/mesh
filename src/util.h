@@ -3,6 +3,11 @@
 #include <stddef.h>
 
 /**
+ * @brief Fix pointer from vector access.
+ */
+#define fix_ptr(ptr) (*(void **)ptr)
+
+/**
  * @brief Malloc requested space and attach a null-terminator to the end.
  *
  * @param[in] count - Count of items of size 'type_size'.

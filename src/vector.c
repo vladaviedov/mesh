@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util.h"
+
 #define EXP_BASE 2
 
 #define ptr_at(vec, index) (vec->raw + vec->_type_size * index)
@@ -42,7 +44,7 @@ void vec_free_with_elements(vector *vec) {
 
 	// Free all elements
 	for (uint32_t i = 0; i < vec->count; i++) {
-		free(*(void **)ptr_at(vec, i));
+		free(fix_ptr(ptr_at(vec, i)));
 	}
 
 	vec_free(vec);

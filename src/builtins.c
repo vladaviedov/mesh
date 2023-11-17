@@ -37,7 +37,7 @@ const builtin *find_builtin(const char *name);
 
 int pure_assign(str_vec *args, int export_flag) {
 	for (uint32_t i = 0; i < args->count; i++) {
-		char *token = *(char **)vec_at(args, i);
+		char *token = fix_ptr(vec_at(args, i));
 
 		char *key = strtok(token, "=");
 		char *value = strtok(NULL, "=");
@@ -54,7 +54,7 @@ int pure_assign(str_vec *args, int export_flag) {
 }
 
 int run_builtin(str_vec *args) {
-	char *name = *(char **)vec_at(args, 0);
+	char *name = fix_ptr(vec_at(args, 0));
 	const builtin *result = find_builtin(name);
 	if (result == NULL) {
 		return -1;

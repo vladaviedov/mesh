@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "util.h"
 #include "vector.h"
 
 #define TEMP_BUF_LEN 1024
@@ -107,6 +108,9 @@ char *parser_sub(char *input_string) {
 				break;
 			case '$':
 				// TODO: implement
+				if (noexpand) {
+					add_temp(ch, temp_index);
+				}
 				break;
 			case '\'':
 				// Convert single quotes to double quotes unless enclosed
@@ -188,12 +192,14 @@ int is_assign(const char *token) {
 	size_t key_len = equal_sign - token;
 	char key[key_len + 1];
 	strncpy(key, token, key_len);
+	key[key_len] = '\0';
+
 	return is_valid_var_name(key);
 }
 
 int is_pure_assign(const str_vec *expression) {
 	for (uint32_t i = 0; i < expression->count; i++) {
-		if (!is_assign(vec_at(expression, i))) {
+		if (!is_assign(fix_ptr(vec_at(expression, i)))) {
 			return 0;
 		}
 	}
