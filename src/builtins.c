@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 
+#include "util.h"
 #include "vars.h"
 #include "vector.h"
 
@@ -65,7 +67,7 @@ int run_builtin(str_vec *args) {
 
 int shell_exit(int argc, const char **argv) {
 	if (argc > 2) {
-		// TODO: too many arguments
+		print_error("exit: too many arguments\n");
 		return CODE_USAGE_ERROR;
 	}
 
@@ -75,7 +77,7 @@ int shell_exit(int argc, const char **argv) {
 		
 		// If string is not only numbers
 		if (*end != '\0') {
-			// TODO: invalid exit code
+			print_error("exit: invalid exit code '%s'\n", argv[1]);
 			return CODE_EXIT_ERROR;
 		}
 
@@ -87,7 +89,7 @@ int shell_exit(int argc, const char **argv) {
 
 int shell_cd(int argc, const char **argv) {
 	if (argc > 2) {
-		// TODO: too many arguments
+		print_error("cd: too many arguments\n");
 		return CODE_USAGE_ERROR;
 	}
 
@@ -97,7 +99,7 @@ int shell_cd(int argc, const char **argv) {
 		: argv[1];
 	if (strcmp(path, "-") == 0) {
 		if ((path = vars_get("OLDPWD")) == NULL) {
-			// TODO: OLDPWD not set
+			print_error("cd: nowhere to go\n");
 			return CODE_GEN_ERROR;
 		}
 
@@ -105,7 +107,7 @@ int shell_cd(int argc, const char **argv) {
 	}
 
 	if (chdir(path) < 0) {
-		// TODO: cannot switch dir
+		print_error("cd: %s: %s\n", path, strerror(errno));
 		return CODE_GEN_ERROR;
 	}
 

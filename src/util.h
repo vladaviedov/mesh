@@ -10,3 +10,11 @@
  * @note Allocated return value.
  */
 void *ntmalloc(size_t count, size_t type_size);
+
+/**
+ * @brief Print shell error.
+ *
+ * @param[in] format - Printf format string.
+ * @param[in] ... - Printf variable args.
+ */
+void print_error(const char *format, ...);

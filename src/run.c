@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include "util.h"
 #include "vars.h"
 #include "parser.h"
 #include "builtins.h"
@@ -59,7 +60,7 @@ int exec_prog(str_vec *args) {
 		execvp(argv[0], argv);
 
 		// Exec failed
-		printf("command not found\n");
+		print_error("%s: command not found\n", argv[0]);
 		exit(1);
 	} else {
 		// Parent - wait
