@@ -19,7 +19,7 @@ int exec_prog(str_vec *args);
 int run_dispatch(str_vec *args) {
 	// Shell assignments
 	if (is_pure_assign(args)) {
-		return pure_assign(args, 0);
+		return pure_assign(args->count, args->raw, 0);
 	}
 	
 	// Builtins

@@ -113,7 +113,11 @@ int vars_set_export(const char *key) {
 		return -1;
 	}
 
-	find_res->is_export = 1;
+	if (!find_res->is_export) {
+		find_res->is_export = 1;
+		export_count++;
+	}
+
 	return 0;
 }
 

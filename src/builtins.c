@@ -18,28 +18,30 @@
 // Builtin table entry
 typedef struct {
 	const char *name;
-	int (*const func)(int argc, const char **argv);
+	int (*const func)(uint32_t argc, char **argv);
 } builtin;
 
 // Builtin functions
-int shell_exit(int argc, const char **argv);
-int shell_cd(int argc, const char **argv);
+int shell_exit(uint32_t argc, char **argv);
+int shell_cd(uint32_t argc, char **argv);
+int shell_set(uint32_t argc, char **argv);
+int shell_export(uint32_t argc, char **argv);
 
 // Builtin registry
 static const builtin registry[] = {
 	{ .name = "exit", .func = &shell_exit },
-	{ .name = "cd", .func = &shell_cd }
+	{ .name = "cd", .func = &shell_cd },
+	{ .name = "set", .func = &shell_set },
+	{ .name = "export", .func = &shell_export }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
 // Helper functions
 const builtin *find_builtin(const char *name);
 
-int pure_assign(str_vec *args, int export_flag) {
-	for (uint32_t i = 0; i < args->count; i++) {
-		char *token = fix_ptr(vec_at(args, i));
-
-		char *key = strtok(token, "=");
+int pure_assign(uint32_t count, char **args, int export_flag) {
+	for (uint32_t i = 0; i < count; i++) {
+		char *key = strtok(args[i], "=");
 		char *value = strtok(NULL, "=");
 
 		vars_set(key, value);
@@ -65,7 +67,7 @@ int run_builtin(str_vec *args) {
 
 /** Builtin implementations */
 
-int shell_exit(int argc, const char **argv) {
+int shell_exit(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("exit: too many arguments\n");
 		return CODE_USAGE_ERROR;
@@ -87,7 +89,7 @@ int shell_exit(int argc, const char **argv) {
 	exit(EXIT_SUCCESS);
 }
 
-int shell_cd(int argc, const char **argv) {
+int shell_cd(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("cd: too many arguments\n");
 		return CODE_USAGE_ERROR;
@@ -117,6 +119,27 @@ int shell_cd(int argc, const char **argv) {
 	vars_set("PWD", pwd);
 	free(pwd);
 
+	return CODE_OK;
+}
+
+int shell_set(uint32_t argc, char **argv) {
+	if (argc > 1) {
+		// TODO: implement
+		print_error("set: this function is not implemented");
+		return CODE_USAGE_ERROR;
+	}
+
+	vars_print_all(0);
+	return CODE_OK;
+}
+
+int shell_export(uint32_t argc, char **argv) {
+	if (argc == 1) {
+		vars_print_all(1);
+		return CODE_OK;
+	}
+
+	pure_assign(argc - 1, argv + 1, 1);
 	return CODE_OK;
 }
 
