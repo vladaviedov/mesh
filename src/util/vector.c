@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
+#include "helper.h"
 
 #define EXP_BASE 2
 

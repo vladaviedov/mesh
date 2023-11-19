@@ -6,9 +6,9 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "util.h"
+#include "../util/helper.h"
+#include "../util/vector.h"
 #include "vars.h"
-#include "vector.h"
 
 #define CODE_OK 0
 #define CODE_GEN_ERROR 1

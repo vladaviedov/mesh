@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
-#include "vector.h"
+#include "../util/helper.h"
+#include "../util/vector.h"
 
 typedef struct {
 	char *key;

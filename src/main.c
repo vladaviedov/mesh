@@ -5,10 +5,10 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "vector.h"
-#include "vars.h"
-#include "parser.h"
-#include "run.h"
+#include "util/vector.h"
+#include "core/vars.h"
+#include "core/parser.h"
+#include "core/run.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "

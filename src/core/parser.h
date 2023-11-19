@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.h"
+#include "../util/vector.h"
 
 /**
  * @brief Split input string into tokens.

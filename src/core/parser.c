@@ -4,8 +4,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "util.h"
-#include "vector.h"
+#include "../util/helper.h"
+#include "../util/vector.h"
 
 #define TEMP_BUF_LEN 1024
 

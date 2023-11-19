@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "util.h"
+#include "../util/helper.h"
 #include "vars.h"
 #include "parser.h"
 #include "builtins.h"
