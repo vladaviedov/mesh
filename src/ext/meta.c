@@ -29,13 +29,29 @@ static const size_t registry_length = sizeof(registry) / sizeof(meta);
 const meta *find_meta(const char *name);
 
 int run_meta(str_vec *args, char **command) {
+	// Check for standard meta
 	char *name = fix_ptr(vec_at(args, 0));
 	const meta *result = find_meta(name);
-	if (result == NULL) {
+	if (result != NULL) {
+		return result->func(args->count, args->raw, command);
+	}
+
+	// Check for numeric meta
+	char *end;
+	uint32_t index = strtoul(name + 1, &end, 10);
+	if (*end != '\0') {
+		print_error("%s: meta command not found\n", name + 1);
 		return -1;
 	}
 
-	return result->func(args->count, args->raw, command);
+	const char *num_result = context_get_row_rel(index);
+	if (num_result == NULL) {
+		print_error("no such command in context\n");
+		return -1;
+	}
+
+	*command = strdup(num_result);
+	return 0;
 }
 
 /** Meta commands */
@@ -79,7 +95,7 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 	uint32_t index = 0;
 	if (argc == 2) {
 		char *end;
-		index = strtol(argv[1], &end, 10);
+		index = strtoul(argv[1], &end, 10);
 
 		if (*end != '\0') {
 			print_error("argument must be a row\n");
