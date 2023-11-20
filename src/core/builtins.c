@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include "../util/helper.h"
@@ -26,13 +27,15 @@ int shell_exit(uint32_t argc, char **argv);
 int shell_cd(uint32_t argc, char **argv);
 int shell_set(uint32_t argc, char **argv);
 int shell_export(uint32_t argc, char **argv);
+int shell_exec(uint32_t argc, char **argv);
 
 // Builtin registry
 static const builtin registry[] = {
 	{ .name = "exit", .func = &shell_exit },
 	{ .name = "cd", .func = &shell_cd },
 	{ .name = "set", .func = &shell_set },
-	{ .name = "export", .func = &shell_export }
+	{ .name = "export", .func = &shell_export },
+	{ .name = "exec", .func = &shell_exec }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
@@ -141,6 +144,25 @@ int shell_export(uint32_t argc, char **argv) {
 
 	pure_assign(argc - 1, argv + 1, 1);
 	return CODE_OK;
+}
+
+int shell_exec(uint32_t argc, char **argv) {
+	if (argc == 1) {
+		return CODE_OK;
+	}
+
+	extern char **environ;
+	environ = vars_export();
+
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+
+	// First argument is skipped
+	char **exec_argv = argv + 1;
+	execvp(exec_argv[0], exec_argv);
+
+	print_error("exec: %s: command not found\n", exec_argv[0]);
+	return CODE_GEN_ERROR;
 }
 
 /** Internal functions */
