@@ -62,6 +62,10 @@ void vec_push(vector *vec, const void *value) {
 			: vec->_alloc_count * EXP_BASE;
 
 		vec->raw = realloc(vec->raw, vec->_type_size * vec->_alloc_count);
+
+		// Zero memory: ensures exec gets null-terminated array
+		size_t added_len = (vec->_alloc_count - vec->count) * vec->_type_size;
+		memset(ptr_at(vec, vec->count), 0, added_len);
 	}
 
 	// Copy element in
