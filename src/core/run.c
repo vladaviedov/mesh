@@ -22,11 +22,12 @@ int run_dispatch(str_vec *args) {
 	char *argv0 = fix_ptr(vec_at(args, 0));
 	if (*argv0 == ':') {
 		char *meta_out;
-		if (run_meta(args, &meta_out) != 0) {
+		int meta_result = run_meta(args, &meta_out);
+
+		if (meta_result < 0) {
 			return -1;
 		}
-
-		if (meta_out == NULL) {
+		if (meta_result == 0) {
 			return 0;
 		}
 

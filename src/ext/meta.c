@@ -17,10 +17,12 @@ typedef struct {
 
 // Meta comamnds
 int meta_ctx(uint32_t argc, char **argv, char **command);
+int meta_abs(uint32_t argc, char **argv, char **command);
 int meta_asroot(uint32_t argc, char **argv, char **command);
 
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx },
+	{ .name = ":abs", .func = &meta_abs },
 	{ .name = ":asroot", .func = &meta_asroot }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
@@ -44,7 +46,9 @@ int run_meta(str_vec *args, char **command) {
 		return -1;
 	}
 
-	const char *num_result = context_get_row_rel(index);
+	const char *num_result = abs_index
+		? context_get_row_abs(index)
+		: context_get_row_rel(index);
 	if (num_result == NULL) {
 		print_error("no such command in context\n");
 		return -1;
@@ -69,7 +73,6 @@ int meta_ctx(uint32_t argc, char **argv, char **command) {
 			return -1;
 		}
 
-		*command = NULL;
 		return 0;
 	}
 
@@ -82,7 +85,37 @@ int meta_ctx(uint32_t argc, char **argv, char **command) {
 		printf("%u: %s\n", index, (char *)fix_ptr(vec_at(ctx->commands, i)));
 	}
 
-	*command = NULL;
+	return 0;
+}
+
+int meta_abs(uint32_t argc, char **argv, char **command) {
+	if (argc > 2) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	if (argc == 2) {
+		switch (argv[1][0]) {
+			case '0':
+				abs_index = 0;
+				break;
+			case '1':
+				abs_index = 1;
+				break;
+			default:
+				print_error("invalid argument\n");
+				return -1;
+		}
+	} else {
+		abs_index = !abs_index;
+	}
+
+	if (abs_index) {
+		printf("using absolute indexing\n");
+	} else {
+		printf("using relative indexing\n");
+	}
+
 	return 0;
 }
 
@@ -103,7 +136,9 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 		}
 	}
 
-	const char *result = context_get_row_rel(index);
+	const char *result = abs_index
+		? context_get_row_abs(index)
+		: context_get_row_rel(index);
 	if (result == NULL) {
 		print_error("no such command in context\n");
 		return -1;
@@ -113,7 +148,7 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 	sprintf(buffer, "doas %s", result);
 
 	*command = strdup(buffer);
-	return 0;
+	return 1;
 }
 
 /** Internal commands */
