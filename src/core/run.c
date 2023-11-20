@@ -32,10 +32,15 @@ int run_dispatch(str_vec *args) {
 		}
 
 		char *subbed_str = parser_sub(meta_out);
-		str_vec *parsed_str = parser_split(subbed_str);
 
-		int result = run_dispatch(parsed_str);
-		vec_free_with_elements(parsed_str);
+		char *end = subbed_str;
+		int result;
+		do {
+			str_vec *parsed_str = parser_split(end, &end);
+			result = run_dispatch(parsed_str);
+			vec_free_with_elements(parsed_str);
+		} while (end != NULL);
+
 		free(subbed_str);
 		free(meta_out);
 		return result;

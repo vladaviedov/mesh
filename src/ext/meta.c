@@ -55,7 +55,7 @@ int run_meta(str_vec *args, char **command) {
 	}
 
 	*command = strdup(num_result);
-	return 0;
+	return 1;
 }
 
 /** Meta commands */

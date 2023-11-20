@@ -18,14 +18,13 @@
 #define PID_STR_MAX_LEN 32
 
 void set_vars(void);
+int process_cmd(char *buffer);
 
 int main() {
-	extern const char **environ;
-	vars_import(environ);
-	set_vars();
-
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
+
+	set_vars();
 
 	context *shell_ctx;
 	context_new("SHELL", &shell_ctx);
@@ -49,18 +48,23 @@ int main() {
 			context_add(strdup(buffer), shell_ctx);
 		}
 
-		char *subbed_str = parser_sub(buffer);
-		str_vec *parsed_str = parser_split(subbed_str);
-
-		run_dispatch(parsed_str);
-		vec_free_with_elements(parsed_str);
-		free(subbed_str);
+		// Return code variable
+		char var_result[16];
+		snprintf(var_result, 16, "%d\n", process_cmd(buffer));
+		vars_set("?", var_result);
 	}
 
 	return 0;
 }
 
+/**
+ * @brief Load environment and set shell variables.
+ */
 void set_vars(void) {
+	// Load environment
+	extern const char **environ;
+	vars_import(environ);
+
 	// Prompts
 	if (vars_get("PS1") == NULL) {
 		char *ps1 = (getuid() == 0) ? PS1_ROOT : PS1_USER;
@@ -77,4 +81,25 @@ void set_vars(void) {
 	char *pwd = getcwd(NULL, 0);
 	vars_set("PWD", pwd);
 	free(pwd);
+}
+
+/**
+ * @brief Process inputted command.
+ *
+ * @param[in] buffer - Raw command.
+ * @return Status code.
+ */
+int process_cmd(char *buffer) {
+	char *subbed_str = parser_sub(buffer);
+
+	char *end = subbed_str;
+	int result;
+	do {
+		str_vec *parsed_str = parser_split(end, &end);
+		result = run_dispatch(parsed_str);
+		vec_free_with_elements(parsed_str);
+	} while (end != NULL);
+
+	free(subbed_str);
+	return result;
 }

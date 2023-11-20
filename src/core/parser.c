@@ -25,67 +25,6 @@ static char temp[TEMP_BUF_LEN];
 }
 #define is_blank(x) (x == ' ' || x == '\t' || x == '\0')
 
-str_vec *parser_split(char *input_string) {
-	str_vec *vec = vec_new(sizeof(char *));
-
-	// Setup
-	clear_temp();
-	uint32_t temp_index = 0;
-	int quote = 0;
-	int empty = 0;
-	char *ptr_buf = NULL;
-
-	char ch;
-	while ((ch = *input_string++) != '\0') {
-		switch (ch)	 {
-			// Separating characters
-			case ' ': // fallthrough
-			case '\t':
-				if (!quote && !empty) {
-					// Insert string or empty string
-					ptr_buf = temp_index == 0
-						? strdup("")
-						: strdup(temp);
-					vec_push(vec, &ptr_buf);
-					// Reset temp
-					clear_temp();
-					temp_index = 0;
-					empty = 1;
-				} else if (!empty) {
-					add_temp(ch, temp_index);
-				}
-				break;
-			// Quotes - only care about double
-			case '\"':
-				quote = !quote;
-				empty = 0;
-				break;
-			// Escaped & Normal chars
-			case '\\':
-				ch = *input_string++;
-				// fallthrough
-			default:
-				empty = 0;
-				add_temp(ch, temp_index);
-				break;
-		}
-	}
-
-	if (!empty) {
-		if (quote) {
-			return NULL;
-			// TODO: report error
-		}
-
-		ptr_buf = temp_index == 0
-			? strdup("")
-			: strdup(temp);
-		vec_push(vec, &ptr_buf);
-	}
-
-	return vec;
-}
-
 char *parser_sub(char *input_string) {
 	if (input_string == NULL) {
 		return NULL;
@@ -161,6 +100,80 @@ char *parser_sub(char *input_string) {
 	}
 
 	return strdup(temp);
+}
+
+str_vec *parser_split(char *input_string, char **end) {
+	str_vec *vec = vec_new(sizeof(char *));
+
+	// Setup
+	clear_temp();
+	uint32_t temp_index = 0;
+	int quote = 0;
+	int empty = 1;
+	int terminated = 0;
+	char *ptr_buf = NULL;
+
+	char ch;
+	while (!terminated && (ch = *input_string++) != '\0') {
+		switch (ch) {
+			// Separating characters
+			case ' ': // fallthrough
+			case '\t':
+				if (!quote && !empty) {
+					// Insert string or empty string
+					ptr_buf = temp_index == 0
+						? strdup("")
+						: strdup(temp);
+					vec_push(vec, &ptr_buf);
+					// Reset temp
+					clear_temp();
+					temp_index = 0;
+					empty = 1;
+				} else if (!empty) {
+					add_temp(ch, temp_index);
+				}
+				break;
+			// Colon is a command terminator
+			case ';':
+				if (!quote) {
+					*end = input_string;
+					terminated = 1;
+				}
+				break;
+			// Quotes - only care about double
+			case '\"':
+				quote = !quote;
+				empty = 0;
+				break;
+			// Escaped & Normal chars
+			case '\\':
+				ch = *input_string++;
+				// fallthrough
+			default:
+				empty = 0;
+				add_temp(ch, temp_index);
+				break;
+		}
+	}
+
+	if (!empty) {
+		if (quote) {
+			print_error("parser: unterminated quotes");
+			return NULL;
+		}
+
+		ptr_buf = temp_index == 0
+			? strdup("")
+			: strdup(temp);
+		vec_push(vec, &ptr_buf);
+	}
+
+	// String fully parsed
+	if (!terminated) {
+		*end = NULL;
+	}
+
+	return vec;
 }
 
 int is_valid_var_name(const char *name) {
