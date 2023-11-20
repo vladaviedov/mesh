@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include "../util/helper.h"
+#include "../ext/meta.h"
 #include "vars.h"
 #include "parser.h"
 #include "builtins.h"
@@ -17,6 +18,28 @@
 int exec_prog(str_vec *args);
 
 int run_dispatch(str_vec *args) {
+	// Meta commands
+	char *argv0 = fix_ptr(vec_at(args, 0));
+	if (*argv0 == ':') {
+		char *meta_out;
+		if (run_meta(args, &meta_out) != 0) {
+			return -1;
+		}
+
+		if (meta_out == NULL) {
+			return 0;
+		}
+
+		char *subbed_str = parser_sub(meta_out);
+		str_vec *parsed_str = parser_split(subbed_str);
+
+		int result = run_dispatch(parsed_str);
+		vec_free_with_elements(parsed_str);
+		free(subbed_str);
+		free(meta_out);
+		return result;
+	}
+
 	// Shell assignments
 	if (is_pure_assign(args)) {
 		return pure_assign(args->count, args->raw, 0);
@@ -27,8 +50,6 @@ int run_dispatch(str_vec *args) {
 	if (code >= 0) {
 		return code;
 	}
-	
-	// TODO: meta commands
 	
 	// Exec program
 	return exec_prog(args);

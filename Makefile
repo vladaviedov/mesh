@@ -12,7 +12,6 @@ OBJS=$(addprefix build/, $(SRCS:.c=.o))
 all: build $(MKSUBDIRS) $(OUT)
 
 $(OUT): $(OBJS)
-	echo $()
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 build:

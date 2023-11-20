@@ -5,7 +5,7 @@
 /**
  * @brief Fix pointer from vector access.
  */
-#define fix_ptr(ptr) (*(void **)ptr)
+#define fix_ptr(ptr) (ptr != NULL ? *(void **)ptr : NULL)
 
 /**
  * @brief Malloc requested space and attach a null-terminator to the end.

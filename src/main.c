@@ -9,6 +9,8 @@
 #include "core/vars.h"
 #include "core/parser.h"
 #include "core/run.h"
+#include "ext/context.h"
+#include "ext/meta.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "
@@ -25,6 +27,10 @@ int main() {
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 
+	context *shell_ctx;
+	context_new("SHELL", &shell_ctx);
+	context_select("SHELL");
+
 	char buffer[1024];
 	uint32_t index = 0;
 
@@ -37,6 +43,10 @@ int main() {
 		while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
 			buffer[index] = ch;
 			index++;
+		}
+
+		if (buffer[0] != ':') {
+			context_add(strdup(buffer), shell_ctx);
 		}
 
 		char *subbed_str = parser_sub(buffer);
