@@ -6,11 +6,6 @@
 #include "../util/helper.h"
 #include "../util/vector.h"
 
-typedef struct context {
-	const char *name;
-	str_vec *commands;
-} context;
-
 typedef vector context_vector;
 static context_vector *contexts;
 
@@ -47,6 +42,10 @@ int context_select(const char *name) {
 
 	current_ctx = ctx;
 	return 0;
+}
+
+const context *context_get(void) {
+	return current_ctx;
 }
 
 const char *context_get_row_abs(uint32_t index) {

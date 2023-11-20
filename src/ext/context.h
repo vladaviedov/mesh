@@ -2,7 +2,12 @@
 
 #include <stdint.h>
 
-typedef struct context context;
+#include "../util/vector.h"
+
+typedef struct context {
+	const char *name;
+	str_vec *commands;
+} context;
 
 /**
  * @brief Create new context.
@@ -20,6 +25,13 @@ int context_new(const char *name, context **ctx_out);
  * @return 0 on success; -1 on failure.
  */
 int context_select(const char *name);
+
+/**
+ * @brief Get current context.
+ *
+ * @return Context object; NULL if not set.
+ */
+const context *context_get(void);
 
 /**
  * @brief Get row from current context.
