@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "util/helper.h"
 #include "util/vector.h"
 #include "core/vars.h"
 #include "core/parser.h"
@@ -20,7 +21,17 @@
 void set_vars(void);
 int process_cmd(char *buffer);
 
-int main() {
+int main(int argc, char **argv) {
+	if (argc > 1) {
+		if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
+			printf("mesh version 0.0.1\n");
+			return 0;
+		}
+
+		print_error("invalid argument\n");
+		return 1;
+	}
+
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 

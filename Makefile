@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-Wall -Wextra -g
 LDFLAGS=
 
-OUT=build/shell
+OUT=build/mesh
 SUBDIRS=$(shell cd src && find * -type d -printf "%p/\n")
 MKSUBDIRS=$(addprefix build/, $(SUBDIRS))
 SRCS=$(shell cd src && find * -type f -name '*.c')
