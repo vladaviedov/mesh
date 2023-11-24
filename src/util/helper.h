@@ -2,6 +2,12 @@
 
 #include <stddef.h>
 
+#ifdef __GNUC__
+#define unused __attribute__((unused))
+#else
+#define unused
+#endif
+
 /**
  * @brief Fix pointer from vector access.
  */

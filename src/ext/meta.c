@@ -16,8 +16,8 @@ typedef struct {
 } meta;
 
 // Meta comamnds
-int meta_ctx(uint32_t argc, char **argv, char **command);
-int meta_abs(uint32_t argc, char **argv, char **command);
+int meta_ctx(uint32_t argc, char **argv, unused char **command);
+int meta_abs(uint32_t argc, char **argv, unused char **command);
 int meta_asroot(uint32_t argc, char **argv, char **command);
 
 static const meta registry[] = {
@@ -60,7 +60,7 @@ int run_meta(str_vec *args, char **command) {
 
 /** Meta commands */
 
-int meta_ctx(uint32_t argc, char **argv, char **command) {
+int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -88,7 +88,7 @@ int meta_ctx(uint32_t argc, char **argv, char **command) {
 	return 0;
 }
 
-int meta_abs(uint32_t argc, char **argv, char **command) {
+int meta_abs(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
