@@ -55,6 +55,14 @@ int main(int argc, char **argv) {
 			index++;
 		}
 
+		if (ch == EOF && errno != EINTR) {
+			putchar('\n');
+			exit(0);
+		}
+
+		if (index == 0) {
+			continue;
+		}
 		if (buffer[0] != ':') {
 			context_add(strdup(buffer), shell_ctx);
 		}
