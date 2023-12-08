@@ -6,6 +6,8 @@
 
 #include "../util/helper.h"
 #include "../util/vector.h"
+#include "../core/vars.h"
+#include "../core/exec.h"
 #include "context.h"
 
 static int abs_index = 0;
@@ -29,6 +31,7 @@ static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
 // Helper functions
 const meta *find_meta(const char *name);
+const char *get_root_program(void);
 
 int run_meta(str_vec *args, char **command) {
 	// Check for standard meta
@@ -144,8 +147,10 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 		return -1;
 	}
 
-	char buffer[strlen(result) + 5];
-	sprintf(buffer, "doas %s", result);
+	// Find 'doas' or 'sudo'
+	const char *root_program = get_root_program();
+	char buffer[strlen(result) + strlen(root_program) + 1];
+	sprintf(buffer, "%s %s", root_program, result);
 
 	*command = strdup(buffer);
 	return 1;
@@ -164,6 +169,39 @@ const meta *find_meta(const char *name) {
 		if (strcmp(registry[i].name, name) == 0) {
 			return registry + i;
 		}
+	}
+
+	return NULL;
+}
+
+static const char *root_prog;
+/**
+ * @brief Get an installed program for becoming root.
+ *
+ * @return Name of program; NULL on error.
+ */
+const char *get_root_program(void) {
+	if (root_prog != NULL) {
+		return root_prog;
+	}
+
+	// Check environment
+	if ((root_prog = vars_get("ASROOTCMD")) != NULL) {
+		return root_prog;
+	}
+
+	// Check for 'doas'
+	char *doas_check[] = { "which", "doas", NULL };
+	if (exec_silent(doas_check) == 0) {
+		root_prog = "doas";
+		return root_prog;
+	}
+	
+	// Check for 'sudo'
+	char *sudo_check[] = { "which", "sudo", NULL };
+	if (exec_silent(sudo_check) == 0) {
+		root_prog = "sudo";
+		return root_prog;
 	}
 
 	return NULL;

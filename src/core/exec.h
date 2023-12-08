@@ -9,6 +9,14 @@
 int exec_normal(char **argv);
 
 /**
+ * @brief Exec wrapper with silenced output.
+ *
+ * @param[in] argv - Child arguments.
+ * @return Return code.
+ */
+int exec_silent(char **argv);
+
+/**
  * @brief Exec wrapper with stdout redirection.
  *
  * @param[in] argv - Child arguments.
