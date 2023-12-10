@@ -48,8 +48,8 @@ int run_meta(str_vec *args, char **command) {
 	const meta *result = find_meta(name);
 	if (result != NULL) {
 		if (result->hidden) {
-			print_error("warning: this command is not intended to be called "
-				"directly from the shell\n");
+			print_warning("this command is not intended to be called directly "
+				"from the shell\n");
 		}
 
 		return result->func(args->count, args->raw, command);

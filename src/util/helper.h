@@ -29,3 +29,11 @@ void *ntmalloc(size_t count, size_t type_size);
  * @param[in] ... - Printf variable args.
  */
 void print_error(const char *format, ...);
+
+/**
+ * @brief Print shell warning.
+ *
+ * @param[in] format - Printf format string.
+ * @param[in] ... - Printf variable args.
+ */
+void print_warning(const char *format, ...);

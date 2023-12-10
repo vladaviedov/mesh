@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #define ERROR_PREFIX "mesh: "
+#define WARNING_PREFIX "warning: "
 
 void *ntmalloc(size_t count, size_t type_size) {
 	void *ptr = malloc((count + 1) * type_size);
@@ -18,6 +19,16 @@ void print_error(const char *format, ...) {
 	va_start(args, format);
 
 	fprintf(stderr, ERROR_PREFIX);
+	vfprintf(stderr, format, args);
+
+	va_end(args);
+}
+
+void print_warning(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+
+	fprintf(stderr, WARNING_PREFIX);
 	vfprintf(stderr, format, args);
 
 	va_end(args);
