@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define ERROR_PREFIX "shell: "
+#define ERROR_PREFIX "mesh: "
 
 void *ntmalloc(size_t count, size_t type_size) {
 	void *ptr = malloc((count + 1) * type_size);
