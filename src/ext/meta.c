@@ -12,20 +12,29 @@
 
 static int abs_index = 0;
 
+// Meta comamnds
 typedef struct {
 	const char *name;
 	int (*const func)(uint32_t argc, char **argv, char **command);
+	int hidden;
 } meta;
 
-// Meta comamnds
+// Shown meta commands
 int meta_ctx(uint32_t argc, char **argv, unused char **command);
 int meta_abs(uint32_t argc, char **argv, unused char **command);
 int meta_asroot(uint32_t argc, char **argv, char **command);
+// "Hidden" meta commands
+int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
+int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
+int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
 
 static const meta registry[] = {
-	{ .name = ":ctx", .func = &meta_ctx },
-	{ .name = ":abs", .func = &meta_abs },
-	{ .name = ":asroot", .func = &meta_asroot }
+	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
+	{ .name = ":abs", .func = &meta_abs, .hidden = 0 },
+	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
+	{ .name = ":_ctx_show", .func = &meta_ctx_show, .hidden = 1 },
+	{ .name = ":_ctx_set", .func = &meta_ctx_set, .hidden = 1 },
+	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -38,6 +47,11 @@ int run_meta(str_vec *args, char **command) {
 	char *name = fix_ptr(vec_at(args, 0));
 	const meta *result = find_meta(name);
 	if (result != NULL) {
+		if (result->hidden) {
+			print_error("warning: this command is not intended to be called "
+				"directly from the shell\n");
+		}
+
 		return result->func(args->count, args->raw, command);
 	}
 
@@ -64,31 +78,20 @@ int run_meta(str_vec *args, char **command) {
 /** Meta commands */
 
 int meta_ctx(uint32_t argc, char **argv, unused char **command) {
-	if (argc > 2) {
-		print_error("too many arguments\n");
+	// No arguments defaults to show current context
+	if (argc == 1) {
+		return meta_ctx_show(1, NULL, NULL);
+	}
+
+	char sub_name[1024];
+	snprintf(sub_name, 1024, ":_ctx_%s", argv[1]);
+	const meta *sub = find_meta(sub_name);
+	if (sub == NULL) {
+		print_error("ctx subcommand '%s' does not exist\n", argv[1]);
 		return -1;
 	}
 
-	// Switch context
-	if (argc == 2) {
-		if (context_select(argv[1]) < 0) {
-			print_error("context '%s' does not exist\n", argv[1]);
-			return -1;
-		}
-
-		return 0;
-	}
-
-	// Print current context
-	const context *ctx = context_get();
-
-	printf("Context name: %s\n\n", ctx->name);
-	for (uint32_t i = 0; i < ctx->commands->count; i++) {
-		uint32_t index = abs_index ? i : ctx->commands->count - i - 1;
-		printf("%u: %s\n", index, (char *)fix_ptr(vec_at(ctx->commands, i)));
-	}
-
-	return 0;
+	return sub->func(argc - 1, argv + 1, command);
 }
 
 int meta_abs(uint32_t argc, char **argv, unused char **command) {
@@ -149,11 +152,97 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 
 	// Find 'doas' or 'sudo'
 	const char *root_program = get_root_program();
+	if (root_program == NULL) {
+		print_error("cannot find doas or sudo on your system\n");
+		return 1;
+	}
+
 	char buffer[strlen(result) + strlen(root_program) + 1];
 	sprintf(buffer, "%s %s", root_program, result);
 
 	*command = strdup(buffer);
 	return 1;
+}
+
+/** Hidden meta commands */
+
+int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
+	if (argc > 2) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	// Get context
+	const context *ctx = (argc == 2)
+		? context_get(argv[1])
+		: context_get(NULL);
+
+	if (ctx == NULL) {
+		if (argv[1] == NULL) {
+			print_error("no context selected\n");
+		} else {
+			print_error("context '%s' not found\n", argv[1]);
+		}
+
+		return -1;
+	}
+
+	// Print context information
+	printf("Context name: %s\n\n", ctx->name);
+	for (uint32_t i = 0; i < ctx->commands->count; i++) {
+		uint32_t index = abs_index ? i : ctx->commands->count - i - 1;
+		printf("%u: %s\n", index, (char *)fix_ptr(vec_at(ctx->commands, i)));
+	}
+
+	return 0;
+}
+
+int meta_ctx_set(uint32_t argc, char **argv, unused char **command) {
+	if (argc > 2) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		print_error("context not specified\n");
+		return -1;
+	}
+
+	if (context_select(argv[1]) < 0) {
+		print_error("context '%s' not found\n");
+		return -1;
+	}
+
+	printf("switched to '%s'\n", argv[1]);
+	return 0;
+}
+
+int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
+	if (argc > 1) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	const context *current_ctx = context_get(NULL);
+	const context_vector *all_ctxs = context_get_all();
+	
+	if (all_ctxs == NULL) {
+		print_error("context system not initialized\n");
+		return -1;
+	}
+
+	for (uint32_t i = 0; i < all_ctxs->count; i++) {
+		const context *ctx = vec_at(all_ctxs, i);
+		printf("%s", ctx->name);
+
+		if (ctx == current_ctx) {
+			printf(" (selected)\n");
+		} else {
+			printf("\n");
+		}
+	}
+
+	return 0;
 }
 
 /** Internal commands */

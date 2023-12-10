@@ -6,9 +6,7 @@
 #include "../util/helper.h"
 #include "../util/vector.h"
 
-typedef vector context_vector;
-static context_vector *contexts;
-
+static context_vector *contexts = NULL;
 static context *current_ctx = NULL;
 
 context *find_context(const char *name);
@@ -44,8 +42,16 @@ int context_select(const char *name) {
 	return 0;
 }
 
-const context *context_get(void) {
-	return current_ctx;
+const context *context_get(const char *name) {
+	if (name == NULL) {
+		return current_ctx;
+	}
+
+	return find_context(name);
+}
+
+const context_vector *context_get_all(void) {
+	return contexts;
 }
 
 const char *context_get_row_abs(uint32_t index) {

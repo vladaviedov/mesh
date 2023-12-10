@@ -9,6 +9,8 @@ typedef struct context {
 	str_vec *commands;
 } context;
 
+typedef vector context_vector;
+
 /**
  * @brief Create new context.
  *
@@ -29,9 +31,17 @@ int context_select(const char *name);
 /**
  * @brief Get current context.
  *
+ * @param[in] name - Context name; if NULL get current.
  * @return Context object; NULL if not set.
  */
-const context *context_get(void);
+const context *context_get(const char *name);
+
+/**
+ * @brief Get all contexts.
+ *
+ * @return Context vector; NULL if not initialized.
+ */
+const context_vector *context_get_all(void);
 
 /**
  * @brief Get row from current context.
