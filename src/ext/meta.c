@@ -29,6 +29,7 @@ int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
 int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
 int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
 int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
+int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
@@ -38,7 +39,8 @@ static const meta registry[] = {
 	{ .name = ":_ctx_set", .func = &meta_ctx_set, .hidden = 1 },
 	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 },
 	{ .name = ":_ctx_make", .func = &meta_ctx_make, .hidden = 1 },
-	{ .name = ":_ctx_new", .func = &meta_ctx_new, .hidden = 1 }
+	{ .name = ":_ctx_new", .func = &meta_ctx_new, .hidden = 1 },
+	{ .name = ":_ctx_del", .func = &meta_ctx_del, .hidden = 1 }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -182,9 +184,7 @@ int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 		: context_get(NULL);
 
 	if (ctx == NULL) {
-		if (argv[1] == NULL) {
-			print_error("no context selected\n");
-		} else {
+		if (argc == 2) {
 			print_error("context '%s' not found\n", argv[1]);
 		}
 
@@ -236,7 +236,7 @@ int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 	}
 
 	for (uint32_t i = 0; i < all_ctxs->count; i++) {
-		const context *ctx = vec_at(all_ctxs, i);
+		const context *ctx = fix_ptr(vec_at(all_ctxs, i));
 		printf("%s", ctx->name);
 
 		if (ctx == current_ctx) {
@@ -277,6 +277,26 @@ int meta_ctx_new(uint32_t argc, char **argv, unused char **command) {
 		return -1;
 	}
 
+	return 0;
+}
+
+int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
+	if (argc > 2) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		print_error("new context requires a name\n");
+		return -1;
+	}
+
+	if (context_delete(argv[1]) < 0) {
+		print_error("failed to delete '%s'\n", argv[1]);
+		return -1;
+	}
+
+	printf("context '%s' deleted\n", argv[1]);
 	return 0;
 }
 

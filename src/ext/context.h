@@ -21,6 +21,14 @@ typedef vector context_vector;
 int context_new(const char *name, context **ctx_out);
 
 /**
+ * @brief Delete context.
+ *
+ * @param[in] name - Context name.
+ * @return 0 on success; -1 on failure.
+ */
+int context_delete(const char *name);
+
+/**
  * @brief Select context.
  *
  * @param[in] name - Context name.
