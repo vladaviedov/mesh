@@ -50,6 +50,11 @@ int run_dispatch(str_vec *args) {
 		return code;
 	}
 	
+	// Add null-terminator to args
+	char *argv[args->count + 1];
+	memcpy(argv, args->raw, args->count * sizeof(char *));
+	argv[args->count] = NULL;
+
 	// Exec program
-	return exec_normal(args->raw);
+	return exec_normal(argv);
 }
