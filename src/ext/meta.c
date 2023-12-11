@@ -27,6 +27,8 @@ int meta_asroot(uint32_t argc, char **argv, char **command);
 int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
 int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
 int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
+int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
+int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
@@ -34,7 +36,9 @@ static const meta registry[] = {
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
 	{ .name = ":_ctx_show", .func = &meta_ctx_show, .hidden = 1 },
 	{ .name = ":_ctx_set", .func = &meta_ctx_set, .hidden = 1 },
-	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 }
+	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 },
+	{ .name = ":_ctx_make", .func = &meta_ctx_make, .hidden = 1 },
+	{ .name = ":_ctx_new", .func = &meta_ctx_new, .hidden = 1 }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -240,6 +244,37 @@ int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 		} else {
 			printf("\n");
 		}
+	}
+
+	return 0;
+}
+
+int meta_ctx_make(uint32_t argc, char **argv, unused char **command) {
+	if (argc > 2) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	if (argc < 2) {
+		print_error("new context requires a name\n");
+		return -1;
+	}
+
+	if (context_new(argv[1], NULL) < 0) {
+		print_error("context already exists\n");
+		return -1;
+	}
+
+	printf("created new context '%s'\n", argv[1]);
+	return 0;
+}
+
+int meta_ctx_new(uint32_t argc, char **argv, unused char **command) {
+	if (meta_ctx_make(argc, argv, command) < 0) {
+		return -1;
+	}
+	if (meta_ctx_set(argc, argv, command) < 0) {
+		return -1;
 	}
 
 	return 0;

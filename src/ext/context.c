@@ -21,7 +21,7 @@ int context_new(const char *name, context **ctx_out) {
 
 	context *ctx = malloc(sizeof(context));
 
-	ctx->name = name;
+	ctx->name = strdup(name);
 	ctx->commands = vec_new(sizeof(char *));
 
 	vec_push(contexts, ctx);
