@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
 		// Return code variable
 		char var_result[16];
-		snprintf(var_result, 16, "%d\n", process_cmd(buffer));
+		snprintf(var_result, 16, "%d", process_cmd(buffer));
 		vars_set("?", var_result);
 	}
 
