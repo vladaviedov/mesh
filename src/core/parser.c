@@ -6,6 +6,7 @@
 
 #include "../util/helper.h"
 #include "../util/vector.h"
+#include "vars.h"
 
 #define TEMP_BUF_LEN 1024
 
@@ -18,11 +19,14 @@ typedef enum {
 
 // Buffer used for parsing
 static char temp[TEMP_BUF_LEN];
-#define clear_temp() memset(temp, 0, TEMP_BUF_LEN)
-#define add_temp(ch, ctr) { \
-	temp[ctr] = ch; \
-	ctr++; \
-}
+static uint32_t temp_index = 0;
+
+void clear_temp(void);
+void add_temp(char ch);
+void insert_temp(const char *str);
+uint32_t parse_var_name(const char *start, char *buffer);
+uint32_t parse_pipe_cmd(const char *start, char *buffer);
+
 #define is_blank(x) (x == ' ' || x == '\t' || x == '\0')
 
 char *parser_sub(char *input_string) {
@@ -31,7 +35,6 @@ char *parser_sub(char *input_string) {
 	}
 
 	clear_temp();
-	uint32_t temp_index = 0;
 	int noexpand = 0;
 	int comment = 0;
 	quote_st quotes = QUOTE_NONE;
@@ -42,14 +45,30 @@ char *parser_sub(char *input_string) {
 		switch (ch) {
 			// Don't touch escaped chars for now
 			case '\\':
-				add_temp(ch, temp_index)
-				add_temp(*input_string++, temp_index);
+				add_temp(ch);
+				add_temp(*input_string++);
 				break;
 			case '$':
-				// TODO: implement
 				if (noexpand) {
-					add_temp(ch, temp_index);
+					add_temp(ch);
 				}
+
+				char buffer[TEMP_BUF_LEN];
+				ch = *input_string;
+				if (ch == '(') {
+					input_string += parse_pipe_cmd(input_string, buffer);
+					// TODO: get value
+					exit(0);
+				} else {
+					input_string += parse_var_name(input_string, buffer);
+					const char *value = vars_get(buffer);
+					if (value == NULL) {
+						continue;
+					}
+
+					insert_temp(value);
+				}
+
 				break;
 			case '\'':
 				// Convert single quotes to double quotes unless enclosed
@@ -57,15 +76,15 @@ char *parser_sub(char *input_string) {
 					case QUOTE_NONE:
 						noexpand = 1;
 						quotes = QUOTE_SINGLE;
-						add_temp('\"', temp_index);
+						add_temp('\"');
 						break;
 					case QUOTE_SINGLE:
 						noexpand = 0;
 						quotes = QUOTE_NONE;
-						add_temp('\"', temp_index);
+						add_temp('\"');
 						break;
 					case QUOTE_DOUBLE:
-						add_temp('\'', temp_index);
+						add_temp('\'');
 						break;
 				}
 				break;
@@ -73,16 +92,16 @@ char *parser_sub(char *input_string) {
 				switch (quotes) {
 					case QUOTE_NONE:
 						quotes = QUOTE_DOUBLE;
-						add_temp('\"', temp_index);
+						add_temp('\"');
 						break;
 					case QUOTE_DOUBLE:
 						quotes = QUOTE_NONE;
-						add_temp('\"', temp_index);
+						add_temp('\"');
 						break;
 					case QUOTE_SINGLE:
 						// Escape quote for splitter
-						add_temp('\\', temp_index);
-						add_temp('\"', temp_index);
+						add_temp('\\');
+						add_temp('\"');
 						break;
 				}
 				break;
@@ -93,7 +112,7 @@ char *parser_sub(char *input_string) {
 				}
 				// fallthrough
 			default:
-				add_temp(ch, temp_index);
+				add_temp(ch);
 				break;
 
 		}
@@ -107,7 +126,6 @@ str_vec *parser_split(char *input_string, char **end) {
 
 	// Setup
 	clear_temp();
-	uint32_t temp_index = 0;
 	int quote = 0;
 	int empty = 1;
 	int terminated = 0;
@@ -130,7 +148,7 @@ str_vec *parser_split(char *input_string, char **end) {
 					temp_index = 0;
 					empty = 1;
 				} else if (!empty) {
-					add_temp(ch, temp_index);
+					add_temp(ch);
 				}
 				break;
 			// Colon is a command terminator
@@ -151,7 +169,7 @@ str_vec *parser_split(char *input_string, char **end) {
 				// fallthrough
 			default:
 				empty = 0;
-				add_temp(ch, temp_index);
+				add_temp(ch);
 				break;
 		}
 	}
@@ -218,4 +236,73 @@ int is_pure_assign(const str_vec *expression) {
 	}
 
 	return 1;
+}
+
+/** Temp buffer manipulation */
+
+void clear_temp(void) {
+	memset(temp, 0, TEMP_BUF_LEN);
+	temp_index = 0;
+}
+
+void add_temp(char ch) {
+	temp[temp_index] = ch;
+	temp_index++;
+}
+
+void insert_temp(const char *str) {
+	strcat(temp, str);
+	temp_index += strlen(str);
+}
+
+uint32_t parse_var_name(const char *start, char *buffer) {
+	uint32_t buffer_index = 0;
+
+	while (1) {
+		char ch = *start++;
+		if (!isalnum(ch)) {
+			// Handle special variables
+			if (buffer_index == 0) {
+				switch (ch) {
+					case '$': // fallthrough
+					case '?':
+						buffer[buffer_index] = ch;
+						buffer_index++;
+						break;
+					default:
+						break;
+				}
+			}
+
+			break;
+		}
+
+		buffer[buffer_index] = ch;
+		buffer_index++;
+	}
+
+	buffer[buffer_index] = '\0';
+	return buffer_index;
+}
+
+uint32_t parse_pipe_cmd(const char *start, char *buffer) {
+	uint32_t buffer_index = 0;
+
+	int end = 0;
+	while (!end) {
+		char ch = *start++;
+		switch (ch) {
+			case '\0': // fallthrough
+			case ')':
+				end = 1;
+				break;
+			default:
+				buffer[buffer_index] = ch;
+				buffer_index++;
+				break;
+		}
+	}
+
+	buffer[buffer_index] = '\0';
+	return buffer_index;
 }
