@@ -335,7 +335,17 @@ int get_pipe_output(char *cmd, char *buffer) {
 		return -1;
 	}
 
-	// Replace newline with null-terminator
+	// Replace last character with null-terminator
 	buffer[size - 1] = '\0';
+
+	// Replace newlines with spaces
+	char ch;
+	while ((ch = *buffer) != '\0') {
+		if (ch == '\n') {
+			*buffer = ' ';
+		}
+		buffer++;
+	}
+
 	return 0;
 }
