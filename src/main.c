@@ -19,7 +19,10 @@
 #define PID_STR_MAX_LEN 32
 
 void set_vars(void);
+void interactive(void);
 int process_cmd(char *buffer);
+
+static context *shell_ctx;
 
 int main(int argc, char **argv) {
 	if (argc > 1) {
@@ -37,40 +40,11 @@ int main(int argc, char **argv) {
 
 	set_vars();
 
-	context *shell_ctx;
 	context_new("SHELL", &shell_ctx);
 	context_select("SHELL");
 
-	char buffer[1024];
-	uint32_t index = 0;
-
 	while (1) {
-		memset(buffer, 0, 1024);
-		index = 0;
-
-		printf("%s", vars_get("PS1"));
-		int ch;
-		while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
-			buffer[index] = ch;
-			index++;
-		}
-
-		if (ch == EOF && errno != EINTR) {
-			putchar('\n');
-			exit(0);
-		}
-
-		if (index == 0) {
-			continue;
-		}
-		if (buffer[0] != ':') {
-			context_add(strdup(buffer), shell_ctx);
-		}
-
-		// Return code variable
-		char var_result[16];
-		snprintf(var_result, 16, "%d", process_cmd(buffer));
-		vars_set("?", var_result);
+		interactive();
 	}
 
 	return 0;
@@ -100,6 +74,41 @@ void set_vars(void) {
 	char *pwd = getcwd(NULL, 0);
 	vars_set("PWD", pwd);
 	free(pwd);
+}
+
+/**
+ * @brief Run shell in interactive mode.
+ */
+void interactive(void) {
+	char buffer[1024];
+	uint32_t index = 0;
+
+	memset(buffer, 0, 1024);
+	index = 0;
+
+	printf("%s", vars_get("PS1"));
+	int ch;
+	while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
+		buffer[index] = ch;
+		index++;
+	}
+
+	if (ch == EOF && errno != EINTR) {
+		putchar('\n');
+		exit(0);
+	}
+
+	if (index == 0) {
+		return;
+	}
+	if (buffer[0] != ':') {
+		context_add(strdup(buffer), shell_ctx);
+	}
+
+	// Return code variable
+	char var_result[16];
+	snprintf(var_result, 16, "%d", process_cmd(buffer));
+	vars_set("?", var_result);
 }
 
 /**
