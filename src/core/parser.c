@@ -246,21 +246,41 @@ int is_pure_assign(const str_vec *expression) {
 
 /** Internal functions */
 
+/**
+ * @brief Reset temp array.
+ */
 void clear_temp(void) {
 	memset(temp, 0, TEMP_BUF_LEN);
 	temp_index = 0;
 }
 
+/**
+ * @brief Add character to temp array.
+ *
+ * @param[in] ch - Character to add.
+ */
 void add_temp(char ch) {
 	temp[temp_index] = ch;
 	temp_index++;
 }
 
+/**
+ * @brief Add string to temp array.
+ *
+ * @param[in] str - String to add.
+ */
 void insert_temp(const char *str) {
 	strcat(temp, str);
 	temp_index += strlen(str);
 }
 
+/**
+ * @brief Parse shell variable name.
+ *
+ * @param[in] start - First character of variable in the input string.
+ * @param[out] buffer - Variable name will be written here.
+ * @return Amount of characters consumed from the input string.
+ */
 uint32_t parse_var_name(const char *start, char *buffer) {
 	uint32_t buffer_index = 0;
 
@@ -291,6 +311,13 @@ uint32_t parse_var_name(const char *start, char *buffer) {
 	return buffer_index;
 }
 
+/**
+ * @brief Parse shell substitution command.
+ *
+ * @param[in] start - The parenthesis on which the command starts.
+ * @param[out] buffer - Command will be written here.
+ * @return Amount of characters consumed from the input string.
+ */
 uint32_t parse_pipe_cmd(const char *start, char *buffer) {
 	uint32_t buffer_index = 0;
 	
@@ -320,6 +347,13 @@ uint32_t parse_pipe_cmd(const char *start, char *buffer) {
 	return buffer_index + 2;
 }
 
+/**
+ * @brief Get command output from subshell.
+ *
+ * @param[in] cmd - Command to run.
+ * @param[out] buffer - Modified subshell stdout output.
+ * @return Execution success.
+ */
 int get_pipe_output(char *cmd, char *buffer) {
 	int pipes[2];
 	if (pipe(pipes) < 0) {
