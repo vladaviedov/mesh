@@ -27,7 +27,7 @@ static context *shell_ctx;
 int main(int argc, char **argv) {
 	if (argc > 1) {
 		if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
-			printf("mesh version 0.1.0\n");
+			printf("mesh version 0.2.0\n");
 			return 0;
 		}
 
