@@ -17,10 +17,10 @@ int exec_normal(char **argv);
 int exec_silent(char **argv);
 
 /**
- * @brief Exec wrapper with stdout redirection.
+ * @brief Command to run in a subshell.
  *
- * @param[in] argv - Child arguments.
- * @param[in] pipe_fd - Stdout pipe file descriptor.
+ * @param[in] cmd - Command sent to stdin.
+ * @param[in] fd_pipe_out - Pipe to replace stdout with.
  * @return Return code.
  */
-int exec_stdout_pipe(char **argv, int pipe_fd);
+int exec_subshell(char *cmd, int fd_pipe_out);

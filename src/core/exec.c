@@ -4,11 +4,15 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "../util/helper.h"
 #include "vars.h"
+
+// Forward declare interactive from main
+void interactive(void);
 
 int exec_normal(char **argv) {
 	pid_t pid = fork();
@@ -75,7 +79,7 @@ int exec_silent(char **argv) {
 	}
 }
 
-int exec_stdout_pipe(char **argv, int pipe_fd) {
+int exec_subshell(char *cmd, int fd_pipe_out) {
 	pid_t pid = fork();
 
 	if (pid < 0) {
@@ -83,24 +87,23 @@ int exec_stdout_pipe(char **argv, int pipe_fd) {
 		print_error("failed to create new process\n");
 		return -1;
 	} else if (pid == 0) {
-		// Child - load environment and exec
-		extern char **environ;
-		environ = vars_export();
+		// Redirect stdin to pipe
+		int stdin_pipe[2];
+		if (pipe(stdin_pipe) < 0) {
+			return -1;
+		}
+		close(STDIN_FILENO);
+		dup2(stdin_pipe[0], STDIN_FILENO);
 
-		// TODO: proper signal reset
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
+		// Write command to stdin
+		write(stdin_pipe[1], cmd, strlen(cmd));
 
 		// Redirect stdout to pipe
 		close(STDOUT_FILENO);
-		dup2(pipe_fd, STDOUT_FILENO);
+		dup2(fd_pipe_out, STDOUT_FILENO);
 
-		// Execute
-		execvp(argv[0], argv);
-
-		// Exec failed
-		print_error("%s: command not found\n", argv[0]);
-		exit(1);
+		interactive();
+		exit(0);
 	} else {
 		// Parent - wait
 		int result;
