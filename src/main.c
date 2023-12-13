@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
 	context_select("SHELL");
 
 	while (1) {
+		printf("%s", vars_get("PS1"));
 		interactive();
 	}
 
@@ -86,7 +87,6 @@ void interactive(void) {
 	memset(buffer, 0, 1024);
 	index = 0;
 
-	printf("%s", vars_get("PS1"));
 	int ch;
 	while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
 		buffer[index] = ch;

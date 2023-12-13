@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../util/helper.h"
 #include "../util/vector.h"
 #include "vars.h"
+#include "exec.h"
 
 #define TEMP_BUF_LEN 1024
 
@@ -26,6 +28,7 @@ void add_temp(char ch);
 void insert_temp(const char *str);
 uint32_t parse_var_name(const char *start, char *buffer);
 uint32_t parse_pipe_cmd(const char *start, char *buffer);
+int get_pipe_output(char *cmd, char *buffer);
 
 #define is_blank(x) (x == ' ' || x == '\t' || x == '\0')
 
@@ -57,8 +60,12 @@ char *parser_sub(char *input_string) {
 				ch = *input_string;
 				if (ch == '(') {
 					input_string += parse_pipe_cmd(input_string, buffer);
-					// TODO: get value
-					exit(0);
+					int result = get_pipe_output(buffer, buffer);
+					if (result < 0) {
+						continue;
+					}
+
+					insert_temp(buffer);
 				} else {
 					input_string += parse_var_name(input_string, buffer);
 					const char *value = vars_get(buffer);
@@ -68,7 +75,6 @@ char *parser_sub(char *input_string) {
 
 					insert_temp(value);
 				}
-
 				break;
 			case '\'':
 				// Convert single quotes to double quotes unless enclosed
@@ -238,7 +244,7 @@ int is_pure_assign(const str_vec *expression) {
 	return 1;
 }
 
-/** Temp buffer manipulation */
+/** Internal functions */
 
 void clear_temp(void) {
 	memset(temp, 0, TEMP_BUF_LEN);
@@ -287,6 +293,9 @@ uint32_t parse_var_name(const char *start, char *buffer) {
 
 uint32_t parse_pipe_cmd(const char *start, char *buffer) {
 	uint32_t buffer_index = 0;
+	
+	// Skip parenthesis
+	start++;
 
 	int end = 0;
 	while (!end) {
@@ -303,6 +312,30 @@ uint32_t parse_pipe_cmd(const char *start, char *buffer) {
 		}
 	}
 
+	// Write newline for subshell
+	buffer[buffer_index++] = '\n';
+
 	buffer[buffer_index] = '\0';
-	return buffer_index;
+	// Extra two chars for ( and )
+	return buffer_index + 2;
+}
+
+int get_pipe_output(char *cmd, char *buffer) {
+	int pipes[2];
+	if (pipe(pipes) < 0) {
+		print_error("failed to create pipe\n");
+		return -1;
+	}
+
+	exec_subshell(cmd, pipes[1]);
+
+	size_t size;
+	if ((size = read(pipes[0], buffer, TEMP_BUF_LEN)) == TEMP_BUF_LEN) {
+		print_error("pipe output is too long\n");
+		return -1;
+	}
+
+	// Replace newline with null-terminator
+	buffer[size - 1] = '\0';
+	return 0;
 }
