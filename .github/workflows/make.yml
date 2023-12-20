@@ -7,12 +7,23 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  linux-build:
+    name: Linux Build
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
         cc: [ gcc, clang ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: make CC=${{ matrix.cc }}
+  
+  macos-build:
+    name: MacOS Build
+    strategy:
+      matrix:
+        cc: [ gcc-13, clang ]
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - name: build
