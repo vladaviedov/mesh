@@ -3,7 +3,7 @@ CFLAGS=-Wall -Wextra -g
 LDFLAGS=
 
 OUT=build/mesh
-SUBDIRS=$(shell cd src && find * -type d -printf "%p/\n")
+SUBDIRS=$(shell cd src && find * -type d)
 MKSUBDIRS=$(addprefix build/, $(SUBDIRS))
 SRCS=$(shell cd src && find * -type f -name '*.c')
 OBJS=$(addprefix build/, $(SRCS:.c=.o))
