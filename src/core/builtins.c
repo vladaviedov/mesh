@@ -28,6 +28,8 @@ int shell_cd(uint32_t argc, char **argv);
 int shell_set(uint32_t argc, char **argv);
 int shell_export(uint32_t argc, char **argv);
 int shell_exec(uint32_t argc, char **argv);
+int shell_true(unused uint32_t argc, unused char **argv);
+int shell_false(unused uint32_t argc, unused char **argv);
 
 // Builtin registry
 static const builtin registry[] = {
@@ -35,7 +37,9 @@ static const builtin registry[] = {
 	{ .name = "cd", .func = &shell_cd },
 	{ .name = "set", .func = &shell_set },
 	{ .name = "export", .func = &shell_export },
-	{ .name = "exec", .func = &shell_exec }
+	{ .name = "exec", .func = &shell_exec },
+	{ .name = "true", .func = &shell_true },
+	{ .name = "false", .func = &shell_false }
 };
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
@@ -162,6 +166,14 @@ int shell_exec(uint32_t argc, char **argv) {
 	execvp(exec_argv[0], exec_argv);
 
 	print_error("exec: %s: command not found\n", exec_argv[0]);
+	return CODE_GEN_ERROR;
+}
+
+int shell_true(unused uint32_t argc, unused char **argv) {
+	return CODE_OK;
+}
+
+int shell_false(unused uint32_t argc, unused char **argv) {
 	return CODE_GEN_ERROR;
 }
 
