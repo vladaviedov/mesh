@@ -41,7 +41,7 @@ void vec_free(vector *vec);
 /**
  * @brief Delete vector but free all its elements first.
  *
- * @param[in] vec - Vector object.
+ * @param[in/out] vec - Vector object.
  */
 void vec_free_with_elements(vector *vec);
 
