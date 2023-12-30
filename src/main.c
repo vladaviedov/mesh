@@ -19,33 +19,49 @@
 #define PID_STR_MAX_LEN 32
 
 void set_vars(void);
-void interactive(void);
+void run_from_stream(FILE *stream);
+void run_script(const char *filename);
 int process_cmd(char *buffer);
 
 static context *shell_ctx;
 
 int main(int argc, char **argv) {
+	set_vars();
+
+	context_new("SHELL", &shell_ctx);
+	context_select("SHELL");
+
 	if (argc > 1) {
-		if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
-			printf("mesh version 0.2.0\n");
-			return 0;
+		if (argv[1][0] == '-') {
+			if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
+				printf("mesh version 0.2.0\n");
+				return 0;
+			}
+			if (strcmp(argv[1], "-c") == 0) {
+				if (argc > 2) {
+					// TODO: positional arguments
+					return process_cmd(argv[2]);
+				} else {
+					print_error("'-c': requires an argument\n");
+					return 1;
+				}
+			}
+
+			print_error("invalid argument\n");
+			return 1;
 		}
 
-		print_error("invalid argument\n");
+		// TODO: positional arguments
+		run_script(argv[1]);
 		return 1;
 	}
 
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 
-	set_vars();
-
-	context_new("SHELL", &shell_ctx);
-	context_select("SHELL");
-
 	while (1) {
 		printf("%s", vars_get("PS1"));
-		interactive();
+		run_from_stream(stdin);
 	}
 
 	return 0;
@@ -78,9 +94,10 @@ void set_vars(void) {
 }
 
 /**
- * @brief Run shell in interactive mode.
+ * @brief Run shell commands read from a specified stream.
  */
-void interactive(void) {
+void run_from_stream(FILE *stream) {
+	int last_result = 0;
 	char buffer[1024];
 	uint32_t index = 0;
 
@@ -88,27 +105,41 @@ void interactive(void) {
 	index = 0;
 
 	int ch;
-	while ((ch = fgetc(stdin)) != '\n' && ch != EOF) {
+	while ((ch = fgetc(stream)) != '\n' && ch != EOF) {
 		buffer[index] = ch;
 		index++;
 	}
 
 	if (ch == EOF && errno != EINTR) {
 		putchar('\n');
-		exit(0);
+		exit(last_result);
 	}
 
-	if (index == 0) {
-		return;
-	}
-	if (buffer[0] != ':') {
-		context_add(strdup(buffer), shell_ctx);
-	}
+	// Execute
+	last_result = process_cmd(buffer);
 
 	// Return code variable
 	char var_result[16];
-	snprintf(var_result, 16, "%d", process_cmd(buffer));
+	snprintf(var_result, 16, "%d", last_result);
 	vars_set("?", var_result);
+}
+
+/**
+ * @brief Run shell script file.
+ *
+ * @param[in] filename - Script filename.
+ */
+void run_script(const char *filename) {
+	FILE *script = fopen(filename, "r");
+	if (!script) {
+		print_error("failed to open file: %s\n", strerror(errno));	
+		return;
+	}
+
+	// Will exit
+	while (1) {
+		run_from_stream(script);
+	}
 }
 
 /**
@@ -119,6 +150,14 @@ void interactive(void) {
  */
 int process_cmd(char *buffer) {
 	char *subbed_str = parser_sub(buffer);
+	if (subbed_str == NULL) {
+		return 0;
+	}
+
+	// Add to context
+	if (subbed_str[0] != ':') {
+		context_add(strdup(buffer), shell_ctx);
+	}
 
 	char *end = subbed_str;
 	int result;

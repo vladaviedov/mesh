@@ -124,7 +124,9 @@ char *parser_sub(char *input_string) {
 		}
 	}
 
-	return strdup(temp);
+	return temp_index == 0
+		? NULL
+		: strdup(temp);
 }
 
 str_vec *parser_split(char *input_string, char **end) {

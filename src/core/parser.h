@@ -7,7 +7,7 @@
  *
  * @param[in] input_string - Input string.
  * @return New string with substitutions.
- * @note Allocated return value.
+ * @note Allocated return value; NULL if empty.
  */
 char *parser_sub(char *input_string);
 
