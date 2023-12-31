@@ -93,7 +93,9 @@ void scope_append_pos(const char *value) {
 	frame.pos_count++;
 
 	// Update variables
-	scope_set_var("@", scope_list_pos());
+	char *list = scope_list_pos();
+	scope_set_var("@", list);
+	free(list);
 
 	char buffer[32];
 	snprintf(buffer, 32, "%d", frame.pos_count);
@@ -114,13 +116,13 @@ char *scope_list_pos(void) {
 		return NULL;
 	}
 
-	uint32_t total_length;
+	uint32_t total_length = 0;
 	const char *pos_vars[frame.pos_count];
 	for (uint32_t i = 0; i < frame.pos_count; i++) {
 		// 1-indexed vars
 		scoped_var *pos_var = find_pos_var(i + 1, NULL);
 		pos_vars[i] = pos_var->value;
-		total_length += strlen(pos_var->value + 1);
+		total_length += strlen(pos_var->value) + 1;
 	}
 
 	char *list = calloc(total_length, sizeof(char));
