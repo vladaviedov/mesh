@@ -1,5 +1,6 @@
 #include "exec.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -11,8 +12,8 @@
 #include "../util/helper.h"
 #include "vars.h"
 
-// Forward declare interactive from main
-void interactive(void);
+// Forward declare from main.c
+void run_from_stream(const FILE *stream);
 
 int exec_normal(char **argv) {
 	pid_t pid = fork();
@@ -102,7 +103,7 @@ int exec_subshell(char *cmd, int fd_pipe_out) {
 		close(STDOUT_FILENO);
 		dup2(fd_pipe_out, STDOUT_FILENO);
 
-		interactive();
+		run_from_stream(stdin);
 		exit(0);
 	} else {
 		// Parent - wait
