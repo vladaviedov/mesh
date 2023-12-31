@@ -1,5 +1,6 @@
 #include "scope.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -29,13 +30,13 @@ static scope_stack *scopes = NULL;
 // Current scope
 static scope frame;
 
+void init_frame(void);
 scoped_var *find_named_var(const char *key, uint32_t *index);
 scoped_var *find_pos_var(uint32_t key, uint32_t *index);
 
 void scope_init(void) {
 	scopes = stack_new(sizeof(scope));
-	frame.vars = vec_new(sizeof(scoped_var));
-	frame.pos_count = 0;
+	init_frame();
 }
 
 void scope_set_var(const char *key, const char *value) {
@@ -90,6 +91,13 @@ void scope_append_pos(const char *value) {
 
 	vec_push(frame.vars, &new_pos);
 	frame.pos_count++;
+
+	// Update variables
+	scope_set_var("@", scope_list_pos());
+
+	char buffer[32];
+	snprintf(buffer, 32, "%d", frame.pos_count);
+	scope_set_var("#", buffer);
 }
 
 const char *scope_get_pos(uint32_t index) {
@@ -102,16 +110,25 @@ const char *scope_get_pos(uint32_t index) {
 }
 
 char *scope_list_pos(void) {
+	if (frame.pos_count == 0) {
+		return NULL;
+	}
+
 	uint32_t total_length;
 	const char *pos_vars[frame.pos_count];
 	for (uint32_t i = 0; i < frame.pos_count; i++) {
-		scoped_var *pos_var = find_pos_var(i, NULL);
+		// 1-indexed vars
+		scoped_var *pos_var = find_pos_var(i + 1, NULL);
 		pos_vars[i] = pos_var->value;
 		total_length += strlen(pos_var->value + 1);
 	}
 
 	char *list = calloc(total_length, sizeof(char));
-	for (uint32_t i = 0; i < frame.pos_count; i++) {
+
+	// Put first one in without a space
+	strcpy(list, pos_vars[0]);
+	for (uint32_t i = 1; i < frame.pos_count; i++) {
+		strcat(list, " ");
 		strcat(list, pos_vars[i]);
 	}
 
@@ -132,9 +149,8 @@ void scope_create_frame(void) {
 	// Save scope
 	stack_push(scopes, &frame);
 
-	// Create new scope
-	frame.vars = vec_new(sizeof(scoped_var));
-	frame.pos_count = 0;
+	// Create new frame
+	init_frame();
 }
 
 int scope_delete_frame(void) {
@@ -153,6 +169,16 @@ int scope_delete_frame(void) {
 }
 
 /** Internal */
+
+/**
+ * @brief Initialize a new scope frame.
+ */
+void init_frame(void) {
+	frame.vars = vec_new(sizeof(scoped_var));
+	frame.pos_count = 0;
+
+	scope_set_var("#", "0");
+}
 
 /**
  * @brief Find variable by name.
