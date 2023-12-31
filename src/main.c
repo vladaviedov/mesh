@@ -121,7 +121,11 @@ void run_from_stream(FILE *stream) {
 	}
 
 	if (ch == EOF && errno != EINTR) {
-		putchar('\n');
+		// Clear line on EOF in interactive mode
+		if (stream == stdin) {
+			putchar('\n');
+		}
+
 		exit(last_result);
 	}
 
