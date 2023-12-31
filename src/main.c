@@ -10,6 +10,7 @@
 #include "core/vars.h"
 #include "core/parser.h"
 #include "core/run.h"
+#include "core/scope.h"
 #include "ext/context.h"
 #include "ext/meta.h"
 
@@ -27,6 +28,7 @@ static context *shell_ctx;
 
 int main(int argc, char **argv) {
 	set_vars();
+	scope_init();
 
 	context_new("SHELL", &shell_ctx);
 	context_select("SHELL");
@@ -39,7 +41,11 @@ int main(int argc, char **argv) {
 			}
 			if (strcmp(argv[1], "-c") == 0) {
 				if (argc > 2) {
-					// TODO: positional arguments
+					// Get positional arguments
+					for (int i = 3; i < argc; i++) {
+						scope_append_pos(argv[i]);
+					}
+
 					return process_cmd(argv[2]);
 				} else {
 					print_error("'-c': requires an argument\n");
@@ -51,7 +57,11 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 
-		// TODO: positional arguments
+		// Get positional arguments
+		for (int i = 2; i < argc; i++) {
+			scope_append_pos(argv[i]);
+		}
+
 		run_script(argv[1]);
 		return 1;
 	}

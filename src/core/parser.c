@@ -8,6 +8,7 @@
 #include "../util/helper.h"
 #include "../util/vector.h"
 #include "vars.h"
+#include "scope.h"
 #include "exec.h"
 
 #define TEMP_BUF_LEN 1024
@@ -66,14 +67,30 @@ char *parser_sub(char *input_string) {
 					}
 
 					insert_temp(buffer);
+				} else if (isdigit(ch)) {
+					// TODO: parse double digit parameters
+					input_string++;
+					// Parse char
+					uint32_t position = ch - '0';
+					const char *value = scope_get_pos(position);
+					if (value != NULL) {
+						insert_temp(value);
+					}
 				} else {
 					input_string += parse_var_name(input_string, buffer);
-					const char *value = vars_get(buffer);
-					if (value == NULL) {
+
+					// Check local scope first
+					const char *value = scope_get_var(buffer);
+					if (value != NULL) {
+						insert_temp(value);
 						continue;
 					}
 
-					insert_temp(value);
+					// Then check the environment
+					value = vars_get(buffer);
+					if (value != NULL) {
+						insert_temp(value);
+					}
 				}
 				break;
 			case '\'':
@@ -293,7 +310,9 @@ uint32_t parse_var_name(const char *start, char *buffer) {
 			if (buffer_index == 0) {
 				switch (ch) {
 					case '$': // fallthrough
-					case '?':
+					case '?': // fallthrough
+					case '#': // fallthrough
+					case '@':
 						buffer[buffer_index] = ch;
 						buffer_index++;
 						break;
