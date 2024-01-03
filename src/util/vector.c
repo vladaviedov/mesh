@@ -44,7 +44,7 @@ void vec_free_with_elements(vector *vec) {
 
 	// Free all elements
 	for (uint32_t i = 0; i < vec->count; i++) {
-		free(fix_ptr(ptr_at(vec, i)));
+		free(vec_at_deref(vec, i));
 	}
 
 	vec_free(vec);
@@ -100,4 +100,11 @@ void *vec_at(const vector *vec, uint32_t index) {
 	}
 
 	return ptr_at(vec, index);
+}
+
+void *vec_at_deref(const vector *vec, uint32_t index) {
+	void *ptr = vec_at(vec, index);
+	return ptr == NULL
+		? NULL
+		: *(void **)ptr;
 }

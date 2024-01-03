@@ -50,7 +50,7 @@ const char *get_root_program(void);
 
 int run_meta(str_vec *args, char **command) {
 	// Check for standard meta
-	char *name = fix_ptr(vec_at(args, 0));
+	char *name = vec_at_deref(args, 0);
 	const meta *result = find_meta(name);
 	if (result != NULL) {
 		if (result->hidden) {
@@ -195,7 +195,7 @@ int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	printf("Context name: %s\n\n", ctx->name);
 	for (uint32_t i = 0; i < ctx->commands->count; i++) {
 		uint32_t index = abs_index ? i : ctx->commands->count - i - 1;
-		printf("%u: %s\n", index, (char *)fix_ptr(vec_at(ctx->commands, i)));
+		printf("%u: %s\n", index, (char *)vec_at_deref(ctx->commands, i));
 	}
 
 	return 0;
@@ -236,7 +236,7 @@ int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 	}
 
 	for (uint32_t i = 0; i < all_ctxs->count; i++) {
-		const context *ctx = fix_ptr(vec_at(all_ctxs, i));
+		const context *ctx = vec_at_deref(all_ctxs, i);
 		printf("%s", ctx->name);
 
 		if (ctx == current_ctx) {
