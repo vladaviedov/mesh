@@ -17,7 +17,9 @@ vector *vec_new(uint64_t type_size) {
 vector *vec_new_with_size(uint64_t type_size, uint32_t vec_size) {
 	vector *vec = malloc(sizeof(vector));
 
-	vec->raw = vec_size ? malloc(type_size * vec_size) : NULL;
+	vec->raw = (vec_size == 0)
+		? NULL
+		: malloc(type_size * vec_size);
 	vec->count = 0;
 	vec->_type_size = type_size;
 	vec->_alloc_count = vec_size;
@@ -90,7 +92,10 @@ int vec_pop(vector *vec, uint32_t index, void *element) {
 		memcpy(ptr_at(vec, i - 1), ptr_at(vec, i), vec->_type_size);
 	}
 
+	// Clean up end element
+	memset(ptr_at(vec, vec->count - 1), 0, vec->_type_size);
 	vec->count--;
+
 	return 0;
 }
 
