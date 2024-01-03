@@ -26,6 +26,7 @@ typedef struct {
 int shell_exit(uint32_t argc, char **argv);
 int shell_cd(uint32_t argc, char **argv);
 int shell_set(uint32_t argc, char **argv);
+int shell_unset(uint32_t argc, char **argv);
 int shell_export(uint32_t argc, char **argv);
 int shell_exec(uint32_t argc, char **argv);
 int shell_true(unused uint32_t argc, unused char **argv);
@@ -36,6 +37,7 @@ static const builtin registry[] = {
 	{ .name = "exit", .func = &shell_exit },
 	{ .name = "cd", .func = &shell_cd },
 	{ .name = "set", .func = &shell_set },
+	{ .name = "unset", .func = &shell_unset },
 	{ .name = "export", .func = &shell_export },
 	{ .name = "exec", .func = &shell_exec },
 	{ .name = "true", .func = &shell_true },
@@ -137,6 +139,20 @@ int shell_set(uint32_t argc, char **argv) {
 	}
 
 	vars_print_all(0);
+	return CODE_OK;
+}
+
+int shell_unset(uint32_t argc, char **argv) {
+	// No args means do nothing
+	if (argc < 2) {
+		return CODE_OK;
+	}
+
+	// Unset list
+	for (uint32_t i = 1; i < argc; i++) {
+		vars_delete(argv[i]);
+	}
+
 	return CODE_OK;
 }
 
