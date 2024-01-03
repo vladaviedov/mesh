@@ -71,3 +71,13 @@ int vec_pop(vector *vec, uint32_t index, void *element);
  * @return Element at index; NULL on error.
  */
 void *vec_at(const vector *vec, uint32_t index);
+
+/**
+ * @brief Get value pointed by the element at index.
+ *
+ * @param[in] vec - Vector object.
+ * @param[in] index - Index.
+ * @return Value pointed by element; NULL on error.
+ * @note Should only be used when vector stores pointer types.
+ */
+void *vec_at_deref(const vector *vec, uint32_t index);

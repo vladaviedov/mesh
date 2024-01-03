@@ -40,7 +40,7 @@ int context_delete(const char *name) {
 	}
 
 	// Reset current context if deleting it
-	if (fix_ptr(vec_at(contexts, index)) == current_ctx) {
+	if (vec_at_deref(contexts, index) == current_ctx) {
 		current_ctx = NULL;
 	}
 
@@ -89,7 +89,7 @@ const char *context_get_row_abs(uint32_t index) {
 		return NULL;
 	}
 
-	return fix_ptr(vec_at(current_ctx->commands, index));
+	return vec_at_deref(current_ctx->commands, index);
 }
 
 const char *context_get_row_rel(uint32_t index) {
@@ -98,7 +98,7 @@ const char *context_get_row_rel(uint32_t index) {
 		return NULL;
 	}
 
-	return fix_ptr(vec_at(current_ctx->commands, current_ctx->commands->count - index - 1));
+	return vec_at_deref(current_ctx->commands, current_ctx->commands->count - index - 1);
 }
 
 int context_add(const char *command, context *ctx) {
@@ -126,7 +126,7 @@ int context_add(const char *command, context *ctx) {
  */
 int find_context_idx(const char *name, uint32_t *index) {
 	for (uint32_t i = 0; i < contexts->count; i++) {
-		context *ctx = fix_ptr(vec_at(contexts, i));
+		context *ctx = vec_at_deref(contexts, i);
 		if (strcmp(ctx->name, name) == 0) {
 			*index = i;
 			return 1;
@@ -145,7 +145,7 @@ int find_context_idx(const char *name, uint32_t *index) {
 context *find_context(const char *name) {
 	uint32_t index;
 	if (find_context_idx(name, &index)) {
-		return fix_ptr(vec_at(contexts, index));
+		return vec_at_deref(contexts, index);
 	}
 
 	return NULL;

@@ -59,7 +59,7 @@ int pure_assign(uint32_t count, char **args, int export_flag) {
 }
 
 int run_builtin(str_vec *args) {
-	char *name = fix_ptr(vec_at(args, 0));
+	char *name = vec_at_deref(args, 0);
 	const builtin *result = find_builtin(name);
 	if (result == NULL) {
 		return -1;

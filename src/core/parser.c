@@ -255,7 +255,7 @@ int is_assign(const char *token) {
 
 int is_pure_assign(const str_vec *expression) {
 	for (uint32_t i = 0; i < expression->count; i++) {
-		if (!is_assign(fix_ptr(vec_at(expression, i)))) {
+		if (!is_assign(vec_at_deref(expression, i))) {
 			return 0;
 		}
 	}

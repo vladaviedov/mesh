@@ -9,11 +9,6 @@
 #endif
 
 /**
- * @brief Fix pointer from vector access.
- */
-#define fix_ptr(ptr) (ptr != NULL ? *(void **)ptr : NULL)
-
-/**
  * @brief Malloc requested space and attach a null-terminator to the end.
  *
  * @param[in] count - Count of items of size 'type_size'.

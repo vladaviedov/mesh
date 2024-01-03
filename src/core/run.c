@@ -12,7 +12,7 @@
 
 int run_dispatch(str_vec *args) {
 	// Meta commands
-	char *argv0 = fix_ptr(vec_at(args, 0));
+	char *argv0 = vec_at_deref(args, 0);
 	if (*argv0 == ':') {
 		char *meta_out;
 		int meta_result = run_meta(args, &meta_out);
