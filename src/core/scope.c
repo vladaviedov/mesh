@@ -74,7 +74,16 @@ int scope_delete_var(const char *key) {
 		return -1;
 	}
 
-	return vec_pop(frame.vars, index, NULL);
+	scoped_var to_delete;
+	if (vec_pop(frame.vars, index, &to_delete) < 0) {
+		return -1;
+	}
+
+	// Free strings
+	free(to_delete.key.name);
+	free(to_delete.value);
+
+	return 0;
 }
 
 uint32_t scope_pos_count(void) {
@@ -140,8 +149,13 @@ char *scope_list_pos(void) {
 void scope_reset_pos(void) {
 	uint32_t vec_i;
 	for (uint32_t i = 0; i < frame.pos_count; i++) {
+		// Get index
 		find_pos_var(i, &vec_i);
-		vec_pop(frame.vars, vec_i, NULL);
+
+		// Delete variable
+		scoped_var var;
+		vec_pop(frame.vars, vec_i, &var);
+		free(var.value);
 	}
 
 	frame.pos_count = 0;

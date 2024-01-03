@@ -104,7 +104,16 @@ int vars_delete(const char *key) {
 		return -1;
 	}
 
-	return vec_pop(env_vars, index, NULL);
+	sh_var to_delete;
+	if (vec_pop(env_vars, index, &to_delete) < 0) {
+		return -1;
+	}
+
+	// Free strings
+	free(to_delete.key);
+	free(to_delete.value);
+
+	return 0;
 }
 
 int vars_set_export(const char *key) {

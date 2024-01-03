@@ -8,7 +8,7 @@
 
 #define EXP_BASE 2
 
-#define ptr_at(vec, index) (vec->raw + vec->_type_size * index)
+#define ptr_at(vec, index) (vec->raw + vec->_type_size * (index))
 
 vector *vec_new(uint64_t type_size) {
 	return vec_new_with_size(type_size, 0);
@@ -88,9 +88,8 @@ int vec_pop(vector *vec, uint32_t index, void *element) {
 	}
 
 	// Move all elements back
-	for (uint32_t i = index + 1; i < vec->count; i++) {
-		memcpy(ptr_at(vec, i - 1), ptr_at(vec, i), vec->_type_size);
-	}
+	uint64_t bytes_after = (vec->count - 1 - index) * vec->_type_size;
+	memmove(ptr_at(vec, index), ptr_at(vec, index + 1), bytes_after);
 
 	// Clean up end element
 	memset(ptr_at(vec, vec->count - 1), 0, vec->_type_size);
