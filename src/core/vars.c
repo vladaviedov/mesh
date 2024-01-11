@@ -33,9 +33,13 @@ void vars_import(const char **env) {
 	while (*env != NULL) {
 		char *copy = strdup(*env);
 
+		char *key = strtok(copy, "=");
+		char *value = strtok(NULL, "=");
+
+		// Value may be NULL
 		sh_var var = {
-			.key = strdup(strtok(copy, "=")),
-			.value = strdup(strtok(NULL, "=")),
+			.key = strdup(key),
+			.value = (value == NULL) ? strdup("") : strdup(value),
 			.is_export = 1
 		};
 
@@ -77,7 +81,7 @@ void vars_set(const char *key, const char *value) {
 		// Create new variable
 		sh_var new_var = {
 			.key = strdup(key),
-			.value = strdup(value),
+			.value = (value == NULL) ? strdup("") : strdup(value),
 			.is_export = 0
 		};
 		vec_push(env_vars, &new_var);

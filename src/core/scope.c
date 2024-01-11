@@ -46,7 +46,7 @@ void scope_set_var(const char *key, const char *value) {
 		// New variable
 		scoped_var new_var = {
 			.key.name = strdup(key),
-			.value = strdup(value),
+			.value = (value == NULL) ? strdup("") : strdup(value),
 			.is_pos = 0,
 		};
 
