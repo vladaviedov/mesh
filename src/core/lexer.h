@@ -7,6 +7,7 @@
 typedef enum {
 	STATEMENT,
 	REDIR,
+	INTERNAL_REDIR,
 	LOGICAL
 } token_type;
 
