@@ -138,8 +138,6 @@ char *parser_sub(char *input_string) {
 		: strdup(temp);
 }
 
-
-
 str_vec *parser_split(char *input_string, char **end) {
 	str_vec *vec = vec_new(sizeof(char *));
 
