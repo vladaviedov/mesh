@@ -6,19 +6,13 @@
 #include <unistd.h>
 
 #include "../util/helper.h"
+#include "../util/parsing.h"
 #include "../util/vector.h"
 #include "vars.h"
 #include "scope.h"
 #include "exec.h"
 
 #define TEMP_BUF_LEN 1024
-
-// Track quote state in substitution
-typedef enum {
-	QUOTE_NONE,
-	QUOTE_SINGLE,
-	QUOTE_DOUBLE
-} quote_st;
 
 // Buffer used for parsing
 static char temp[TEMP_BUF_LEN];
@@ -30,8 +24,6 @@ void insert_temp(const char *str);
 uint32_t parse_var_name(const char *start, char *buffer);
 uint32_t parse_pipe_cmd(const char *start, char *buffer);
 int get_pipe_output(char *cmd, char *buffer);
-
-#define is_blank(x) (x == ' ' || x == '\t' || x == '\0')
 
 char *parser_sub(char *input_string) {
 	if (input_string == NULL) {
@@ -145,6 +137,8 @@ char *parser_sub(char *input_string) {
 		? NULL
 		: strdup(temp);
 }
+
+
 
 str_vec *parser_split(char *input_string, char **end) {
 	str_vec *vec = vec_new(sizeof(char *));
