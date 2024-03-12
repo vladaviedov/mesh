@@ -76,6 +76,14 @@ token_vec *lexer_run(const char *input) {
 		input++;
 	}
 
+	// Create last token
+	token last = {
+		.type = STATEMENT,
+		.start = input - length,
+		.length = length
+	};
+	vec_push(tokens, &last);
+
 	return tokens;
 }
 
