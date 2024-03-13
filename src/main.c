@@ -188,6 +188,12 @@ int process_cmd(char *buffer) {
 		printf("%s]\n", st);
 	}
 
+	if (lexer_verify(tokens) < 0) {
+		printf("Verification failed\n");
+	} else {
+		printf("Verification passed\n");
+	}
+
 	return 0;
 
 	/*

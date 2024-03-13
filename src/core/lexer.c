@@ -2,7 +2,6 @@
 
 #include <ctype.h>
 #include <stdint.h>
-#include <stddef.h>
 
 #include "../util/parsing.h"
 #include "../util/vector.h"
@@ -87,6 +86,51 @@ token_vec *lexer_run(const char *input) {
 	push_non_empty(tokens, &last);
 
 	return tokens;
+}
+
+int lexer_verify(const token_vec *tokens) {
+	// First token - cannot be logical
+	token_type last_type = ((token *)vec_at(tokens, 0))->type;
+	if (last_type == LOGICAL) {
+		return -1;
+	}
+
+	for (uint32_t i = 1; i < tokens->count; i++) {
+		token_type type = ((token *)vec_at(tokens, i))->type;
+
+		switch (last_type) {
+			case INTERNAL_REDIR:
+				// Self-contained
+				break;
+			case STATEMENT:
+				// Cannot have two statements next to each other
+				if (type == STATEMENT) {
+					return -1;
+				}
+				break;
+			case REDIR:
+				// Must be followed with a statement
+				if (type != STATEMENT) {
+					return -1;
+				}
+				break;
+			case LOGICAL:
+				// or internal redir here
+				if (type != STATEMENT || type != INTERNAL_REDIR) {
+					return -1;
+				}
+				break;
+		}
+
+		last_type = type;
+	}
+
+	// Last token - cannot be external redir
+	if (last_type == REDIR) {
+		return -1;
+	}
+
+	return 0;
 }
 
 /**
