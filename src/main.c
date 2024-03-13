@@ -8,6 +8,7 @@
 #include "util/helper.h"
 #include "util/vector.h"
 #include "core/vars.h"
+#include "core/lexer.h"
 #include "core/parser.h"
 #include "core/run.h"
 #include "core/scope.h"
@@ -163,6 +164,33 @@ void run_script(const char *filename) {
  * @return Status code.
  */
 int process_cmd(char *buffer) {
+	token_vec *tokens = lexer_run(buffer);
+	char st[512];
+	for (uint32_t i = 0; i < tokens->count; i++) {
+		token *t = vec_at(tokens, i);
+
+		switch (t->type) {
+			case STATEMENT:
+				printf("[statement, ");
+				break;
+			case REDIR:
+				printf("[redir, ");
+				break;
+			case INTERNAL_REDIR:
+				printf("[int_redir, ");
+				break;
+			case LOGICAL:
+				printf("[logical, ");
+				break;
+		}
+
+		snprintf(st, t->length + 1, "%s", t->start);
+		printf("%s]\n", st);
+	}
+
+	return 0;
+
+	/*
 	char *subbed_str = parser_sub(buffer);
 	if (subbed_str == NULL) {
 		return 0;
@@ -183,4 +211,5 @@ int process_cmd(char *buffer) {
 
 	free(subbed_str);
 	return result;
+	*/
 }

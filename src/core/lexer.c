@@ -7,6 +7,7 @@
 #include "../util/parsing.h"
 #include "../util/vector.h"
 
+void push_non_empty(token_vec *vec, token *maybe_token);
 token parse_redir(const char *hit, uint32_t before_count);
 
 token_vec *lexer_run(const char *input) {
@@ -60,8 +61,8 @@ token_vec *lexer_run(const char *input) {
 					.length = length - length_adj
 				};
 
-				vec_push(tokens, &stat);
-				vec_push(tokens, &redir);
+				push_non_empty(tokens, &stat);
+				push_non_empty(tokens, &redir);
 
 				// Set new token start where redir ends
 				input = redir.start + redir.length;
@@ -82,9 +83,24 @@ token_vec *lexer_run(const char *input) {
 		.start = input - length,
 		.length = length
 	};
-	vec_push(tokens, &last);
+	push_non_empty(tokens, &last);
 
 	return tokens;
+}
+
+/**
+ * @brief Push token only if it has non-blank characters.
+ *
+ * @param[in/out] vec - Vector object.
+ * @param[in] maybe_token - Token tested.
+ */
+void push_non_empty(token_vec *vec, token *maybe_token) {
+	for (uint32_t i = 0; i < maybe_token->length; i++) {
+		if (!is_blank(maybe_token->start[i])) {
+			vec_push(vec, maybe_token);
+			return;
+		}
+	}
 }
 
 /**
@@ -117,7 +133,8 @@ token parse_redir(const char *hit, uint32_t before_count) {
 	
 	// Check for 'n' - go back until first digit
 	const char *ptr = hit;
-	while (before_count > 0 && isdigit(*ptr--)) {
+	while (before_count > 0 && isdigit(*(ptr - 1))) {
+		ptr--;
 		before_count--;
 	}
 
