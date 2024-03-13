@@ -22,6 +22,7 @@ token_vec *lexer_run(const char *input) {
 		switch (ch) {
 			case '\\':
 				input++;
+				length++;
 				break;
 			case '\'':
 				switch (quotes) {
@@ -138,8 +139,8 @@ token parse_redir(const char *hit, uint32_t before_count) {
 		before_count--;
 	}
 
-	// Only add number if not escaped
-	if (*(ptr - 1) != '\\') {
+	// Only add the number if it's not connected to a word
+	if (before_count == 0 || is_blank(*(ptr - 1))) {
 		t.start = ptr;
 		t.length += hit - ptr;
 	}
