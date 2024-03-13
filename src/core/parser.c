@@ -31,7 +31,6 @@ char *parser_sub(char *input_string) {
 	}
 
 	clear_temp();
-	int noexpand = 0;
 	int comment = 0;
 	quote_st quotes = QUOTE_NONE;
 
@@ -41,12 +40,19 @@ char *parser_sub(char *input_string) {
 		switch (ch) {
 			// Don't touch escaped chars for now
 			case '\\':
+				// Add aditional escape chars if quoted
+				// TODO: section 2.2.3 of the spec
 				add_temp(ch);
+				if (quotes != QUOTE_NONE) {
+					add_temp(ch);
+					add_temp(ch);
+				}
 				add_temp(*input_string++);
 				break;
 			case '$':
-				if (noexpand) {
+				if (quotes == QUOTE_SINGLE) {
 					add_temp(ch);
+					break;
 				}
 
 				char buffer[TEMP_BUF_LEN];
@@ -89,12 +95,10 @@ char *parser_sub(char *input_string) {
 				// Convert single quotes to double quotes unless enclosed
 				switch (quotes) {
 					case QUOTE_NONE:
-						noexpand = 1;
 						quotes = QUOTE_SINGLE;
 						add_temp('\"');
 						break;
 					case QUOTE_SINGLE:
-						noexpand = 0;
 						quotes = QUOTE_NONE;
 						add_temp('\"');
 						break;
