@@ -8,7 +8,8 @@ typedef enum {
 	STATEMENT,
 	REDIR,
 	INTERNAL_REDIR,
-	LOGICAL
+	LOGICAL,
+	PIPE
 } token_type;
 
 typedef struct {

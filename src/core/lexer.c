@@ -8,6 +8,7 @@
 
 void push_non_empty(token_vec *vec, token *maybe_token);
 token parse_redir(const char *hit, uint32_t before_count);
+token parse_logic_or_pipe(const char *hit);
 
 token_vec *lexer_run(const char *input) {
 	token_vec *tokens = vec_new(sizeof(token_vec));
@@ -69,6 +70,25 @@ token_vec *lexer_run(const char *input) {
 				length = 0;
 				continue;
 			}
+			case ';': // fallthrough
+			case '&': // fallthrough
+			case '|': {
+				token logic_or_pipe = parse_logic_or_pipe(input);
+
+				// Create statement
+				token stat = {
+					.type = STATEMENT,
+					.start = input - length,
+					.length = length
+				};
+
+				push_non_empty(tokens, &stat);
+				push_non_empty(tokens, &logic_or_pipe);
+
+				input = logic_or_pipe.start + logic_or_pipe.length;
+				length = 0;
+				continue;
+			}
 			default:
 				break;
 		}
@@ -108,6 +128,7 @@ int lexer_verify(const token_vec *tokens) {
 					return -1;
 				}
 				break;
+			case PIPE: // fallthrough
 			case REDIR:
 				// Must be followed with a statement
 				if (type != STATEMENT) {
@@ -116,7 +137,7 @@ int lexer_verify(const token_vec *tokens) {
 				break;
 			case LOGICAL:
 				// or internal redir here
-				if (type != STATEMENT || type != INTERNAL_REDIR) {
+				if (type != STATEMENT && type != INTERNAL_REDIR) {
 					return -1;
 				}
 				break;
@@ -230,5 +251,49 @@ token parse_redir(const char *hit, uint32_t before_count) {
 		}
 	}
 	
+	return t;
+}
+
+/**
+ * @brief Parse and size logical token.
+ *
+ * @param[in] hit - Location of the first character.
+ * @param[in] before_count - Characters available to read before the hit.
+ * @return Logical token.
+ */
+token parse_logic_or_pipe(const char *hit) {
+	// All operations we need to check:
+	// ;
+	// &
+	// &&
+	// |
+	// ||
+
+	token t = {
+		.type = LOGICAL,
+		.start = hit,
+		.length = 1
+	};
+
+	if (*hit == ';') {
+		return t;
+	}
+
+	char next = *(hit + 1);
+	if (*hit == '&') {
+		if (next == '&') {
+			t.length++;
+		}
+
+		return t;
+	}
+
+	// *hit == '|'
+	if (next == '|') {
+		t.length++;
+	} else {
+		t.type = PIPE;
+	}
+
 	return t;
 }

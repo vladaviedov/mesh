@@ -182,6 +182,9 @@ int process_cmd(char *buffer) {
 			case LOGICAL:
 				printf("[logical, ");
 				break;
+			case PIPE:
+				printf("[pipe, ");
+				break;
 		}
 
 		snprintf(st, t->length + 1, "%s", t->start);
