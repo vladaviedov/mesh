@@ -1,33 +1,71 @@
+PWD=$(shell pwd)
+BUILD=$(PWD)/build
+MAN_DIR=$(BUILD)/share/man/man1
+
 CC=gcc
-CFLAGS=-Wall -Wextra -g
-LDFLAGS=
+CFLAGS=-I$(BUILD)/include -std=gnu99
+CFLAGS_RELEASE=-O2
+CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
+LDFLAGS=-L$(BUILD)/lib -lutils
 
-OUT=build/mesh
-SUBDIRS=$(shell cd src && find * -type d)
-MKSUBDIRS=$(addprefix build/, $(SUBDIRS))
-SRCS=$(shell cd src && find * -type f -name '*.c')
-OBJS=$(addprefix build/, $(SRCS:.c=.o))
+LIBUTILS_CONFIG=$(PWD)/lib/libutils.conf
+LIBUTILS=$(BUILD)/lib/libutils.a
 
-.PHONY:
-all: build $(MKSUBDIRS) $(OUT)
+TARGET=$(BUILD)/bin/mesh
+MAN_PAGE=$(PWD)/doc/mesh.man
+PREFIX?=/usr
 
-$(OUT): $(OBJS)
-	$(CC) $^ -o $@ $(LDFLAGS)
+SUBDIRS=$(shell cd $(PWD)/src && find * -type d)
+MKSUBDIRS=$(addprefix $(BUILD)/obj/, $(SUBDIRS))
+SRCS=$(shell cd $(PWD)/src && find * -type f -name '*.c')
+OBJS=$(addprefix $(BUILD)/obj/, $(SRCS:.c=.o))
 
-build:
-	mkdir -p build
-
-# Mkdir template
+# Templates
 define mk_subdir
-build/$(1):
+$(BUILD)/obj/$(1):
 	mkdir -p $$@
 endef
 
-# Build template
 define compile_subdir
-build/$(1)%.o: src/$(1)%.c
+$(BUILD)/obj/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS)
 	$(CC) $(CFLAGS) -c $$< -o $$@
 endef
+
+# Build tasks
+.PHONY: release
+release: TASK=release
+release: CFLAGS+=$(CFLAGS_RELEASE)
+release: build
+
+.PHONY: debug
+debug: TASK=debug
+debug: CFLAGS+=$(CFLAGS_DEBUG)
+debug: build
+
+.PHONY: install
+install:
+	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
+	cp $(TARGET) $(PREFIX)/bin
+	# gzip -c $(MAN_PAGE) > $(PREFIX)/share/man/man1/mesh.1.gz
+
+.PHONY: build
+build: $(BUILD) $(MKSUBDIRS) $(TARGET)
+
+.PHONY: clean
+clean:
+	rm -rf $(BUILD)
+
+$(BUILD):
+	mkdir -p $(BUILD)
+	mkdir -p $(BUILD)/bin
+
+$(LIBUTILS): lib/c-utils
+	$(MAKE) -C $< $(TASK) \
+		CONFIG_PATH=$(LIBUTILS_CONFIG) \
+		BUILD=$(BUILD)
+
+$(TARGET): $(LIBUTILS) $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
 # Build root
 $(eval $(call mk_subdir,))
@@ -37,6 +75,15 @@ $(eval $(call compile_subdir,))
 $(foreach subdir, $(SUBDIRS), $(eval $(call mk_subdir,$(subdir))))
 $(foreach subdir, $(SUBDIRS), $(eval $(call compile_subdir,$(subdir))))
 
-.PHONY: clean
-clean:
-	rm -rf build
+# Formatting
+FORMAT=clang-format
+FORMAT_CHECK_FLAGS=--dry-run --Werror
+FORMAT_FIX_FLAGS=-i
+
+.PHONY: checkformat
+checkformat:
+	$(FORMAT) $(FORMAT_CHECK_FLAGS) $(SRCS)
+
+.PHONY: format
+format:
+	$(FORMAT) $(FORMAT_FIX_FLAGS) $(SRCS)

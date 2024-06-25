@@ -5,9 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <c-utils/vector.h>
+#include <c-utils/stack.h>
+
 #include "../util/helper.h"
-#include "../util/vector.h"
-#include "../util/stack.h"
 
 typedef union {
 	char *name;
@@ -19,10 +20,14 @@ typedef struct {
 	char *value;
 	int is_pos;
 } scoped_var;
+
+typedef vector scoped_var_vector;
+
 typedef struct {
-	vector *vars;
+	scoped_var_vector vars;
 	uint32_t pos_count;
 } scope;
+
 typedef stack scope_stack;
 
 // Stack of scopes
@@ -50,7 +55,7 @@ void scope_set_var(const char *key, const char *value) {
 			.is_pos = 0,
 		};
 
-		vec_push(frame.vars, &new_var);
+		vec_push(&frame.vars, &new_var);
 	} else {
 		// Update existing
 		free(find_res->value);
@@ -74,7 +79,7 @@ int scope_delete_var(const char *key) {
 		return -1;
 	}
 
-	return vec_pop(frame.vars, index, NULL);
+	return vec_erase(&frame.vars, index, NULL);
 }
 
 uint32_t scope_pos_count(void) {
@@ -89,7 +94,7 @@ void scope_append_pos(const char *value) {
 		.is_pos = 1
 	};
 
-	vec_push(frame.vars, &new_pos);
+	vec_push(&frame.vars, &new_pos);
 	frame.pos_count++;
 
 	// Update variables
@@ -141,7 +146,7 @@ void scope_reset_pos(void) {
 	uint32_t vec_i;
 	for (uint32_t i = 0; i < frame.pos_count; i++) {
 		find_pos_var(i, &vec_i);
-		vec_pop(frame.vars, vec_i, NULL);
+		vec_erase(&frame.vars, vec_i, NULL);
 	}
 
 	frame.pos_count = 0;
@@ -162,7 +167,7 @@ int scope_delete_frame(void) {
 	}
 
 	// Delete scope
-	vec_free(frame.vars);
+	vec_deinit(&frame.vars);
 
 	// Load old scope
 	stack_pop(scopes, &frame);
@@ -176,7 +181,7 @@ int scope_delete_frame(void) {
  * @brief Initialize a new scope frame.
  */
 void init_frame(void) {
-	frame.vars = vec_new(sizeof(scoped_var));
+	frame.vars = vec_init(sizeof(scoped_var));
 	frame.pos_count = 0;
 
 	scope_set_var("#", "0");
@@ -190,8 +195,8 @@ void init_frame(void) {
  * @return Scoped nonpositional variable; NULL on error.
  */
 scoped_var *find_named_var(const char *key, uint32_t *index) {
-	for (uint32_t i = 0; i < frame.vars->count; i++) {
-		scoped_var *entry = vec_at(frame.vars, i);
+	for (uint32_t i = 0; i < frame.vars.count; i++) {
+		scoped_var *entry = vec_at_mut(&frame.vars, i);
 		if (entry->is_pos) {
 			continue;
 		}
@@ -215,8 +220,8 @@ scoped_var *find_named_var(const char *key, uint32_t *index) {
  * @return Scoped positional variable; NULL on error.
  */
 scoped_var *find_pos_var(uint32_t key, uint32_t *index) {
-	for (uint32_t i = 0; i < frame.vars->count; i++) {
-		scoped_var *entry = vec_at(frame.vars, i);
+	for (uint32_t i = 0; i < frame.vars.count; i++) {
+		scoped_var *entry = vec_at_mut(&frame.vars, i);
 		if (!entry->is_pos) {
 			continue;
 		}

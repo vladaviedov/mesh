@@ -2,11 +2,11 @@
 
 #include <stdint.h>
 
-#include "../util/vector.h"
+#include <c-utils/vector.h>
 
 typedef struct context {
 	const char *name;
-	str_vec *commands;
+	vector *commands;
 } context;
 
 typedef vector context_vector;
@@ -49,7 +49,7 @@ const context *context_get(const char *name);
  *
  * @return Context vector; NULL if not initialized.
  */
-const context_vector *context_get_all(void);
+const vector *context_get_all(void);
 
 /**
  * @brief Get row from current context.

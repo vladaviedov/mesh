@@ -7,8 +7,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <c-utils/vector.h>
+
 #include "../util/helper.h"
-#include "../util/vector.h"
 #include "vars.h"
 
 #define CODE_OK 0
@@ -58,14 +59,14 @@ int pure_assign(uint32_t count, char **args, int export_flag) {
 	return 0;
 }
 
-int run_builtin(str_vec *args) {
-	char *name = vec_at_deref(args, 0);
-	const builtin *result = find_builtin(name);
+int run_builtin(string_vector *args) {
+	char *const *name = vec_at(args, 0);
+	const builtin *result = find_builtin(*name);
 	if (result == NULL) {
 		return -1;
 	}
 
-	return result->func(args->count, args->raw);
+	return result->func(args->count, args->data);
 }
 
 /** Builtin implementations */

@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../util/vector.h"
+#include <stdint.h>
+#include <c-utils/vector.h>
+
+#include "../util/helper.h"
 
 /**
  * @brief Assign requested variables.
@@ -18,4 +21,4 @@ int pure_assign(uint32_t count, char **args, int export_flag);
  * @param[in] args - Argument vector.
  * @return Exit code; -1 if not found.
  */
-int run_builtin(str_vec *args);
+int run_builtin(string_vector *args);

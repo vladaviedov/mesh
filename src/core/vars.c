@@ -4,14 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <c-utils/vector.h>
+
 #include "../util/helper.h"
-#include "../util/vector.h"
 
 typedef struct {
 	char *key;
 	char *value;
 	int is_export;
 } sh_var;
+
 typedef vector sh_var_vector;
 
 // Env var vector
@@ -25,7 +27,7 @@ sh_var *find_sh_var(const char *key, uint32_t *index);
 void vars_import(const char **env) {
 	// Reset env vars if populated
 	if (env_vars != NULL) {
-		vec_free(env_vars);
+		vec_delete(env_vars);
 		export_count = 0;
 	}
 
@@ -60,7 +62,7 @@ char **vars_export(void) {
 	uint32_t index = 0;
 
 	for (uint32_t i = 0; i < env_vars->count; i++) {
-		sh_var *entry = vec_at(env_vars, i);
+		const sh_var *entry = vec_at(env_vars, i);
 		if (entry == NULL) {
 			return NULL;
 		}
@@ -108,7 +110,7 @@ int vars_delete(const char *key) {
 		return -1;
 	}
 
-	return vec_pop(env_vars, index, NULL);
+	return vec_erase(env_vars, index, NULL);
 }
 
 int vars_set_export(const char *key) {
@@ -131,7 +133,7 @@ void vars_print_all(int export_flag) {
 	}
 
 	for (uint32_t i = 0; i < env_vars->count; i++) {
-		sh_var *entry = vec_at(env_vars, i);
+		const sh_var *entry = vec_at(env_vars, i);
 
 		// If export is set, skip unexported
 		if (export_flag && !entry->is_export) {
@@ -176,7 +178,7 @@ char *sh_var_to_string(const sh_var *var) {
  */
 sh_var *find_sh_var(const char *key, uint32_t *index) {
 	for (uint32_t i = 0; i < env_vars->count; i++) {
-		sh_var *entry = vec_at(env_vars, i);
+		sh_var *entry = vec_at_mut(env_vars, i);
 		if (strcmp(entry->key, key) == 0) {
 			if (index != NULL) {
 				*index = i;

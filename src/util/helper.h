@@ -2,11 +2,15 @@
 
 #include <stddef.h>
 
+#include <c-utils/vector.h>
+
 #ifdef __GNUC__
 #define unused __attribute__((unused))
 #else
 #define unused
 #endif
+
+typedef vector string_vector;
 
 /**
  * @brief Malloc requested space and attach a null-terminator to the end.
@@ -32,3 +36,10 @@ void print_error(const char *format, ...);
  * @param[in] ... - Printf variable args.
  */
 void print_warning(const char *format, ...);
+
+/**
+ * @brief Free vector and its elements.
+ *
+ * @param[in] vec - Vector object.
+ */
+void free_with_elements(vector *vec);

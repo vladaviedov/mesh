@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../util/vector.h"
+#include <c-utils/vector.h>
+
+#include "../util/helper.h"
 
 /**
  * @brief Run shell meta command.
@@ -10,4 +12,4 @@
  * @return 0 on success; -1 on error.
  * @note When successful and command != NULL, command will be allocated.
  */
-int run_meta(str_vec *args, char **command);
+int run_meta(string_vector *args, char **command);

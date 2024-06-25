@@ -5,8 +5,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <c-utils/vector.h>
+
 #include "util/helper.h"
-#include "util/vector.h"
 #include "core/vars.h"
 #include "core/parser.h"
 #include "core/run.h"
@@ -176,9 +177,9 @@ int process_cmd(char *buffer) {
 	char *end = subbed_str;
 	int result;
 	do {
-		str_vec *parsed_str = parser_split(end, &end);
+		string_vector *parsed_str = parser_split(end, &end);
 		result = run_dispatch(parsed_str);
-		vec_free_with_elements(parsed_str);
+		free_with_elements(parsed_str);
 	} while (end != NULL);
 
 	free(subbed_str);

@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <c-utils/vector.h>
+
 #include "../util/helper.h"
-#include "../util/vector.h"
 #include "../core/vars.h"
 #include "../core/exec.h"
 #include "context.h"
@@ -48,24 +49,24 @@ static const size_t registry_length = sizeof(registry) / sizeof(meta);
 const meta *find_meta(const char *name);
 const char *get_root_program(void);
 
-int run_meta(str_vec *args, char **command) {
+int run_meta(string_vector *args, char **command) {
 	// Check for standard meta
-	char *name = vec_at_deref(args, 0);
-	const meta *result = find_meta(name);
+	char *const *name = vec_at(args, 0);
+	const meta *result = find_meta(*name);
 	if (result != NULL) {
 		if (result->hidden) {
 			print_warning("this command is not intended to be called directly "
 				"from the shell\n");
 		}
 
-		return result->func(args->count, args->raw, command);
+		return result->func(args->count, args->data, command);
 	}
 
 	// Check for numeric meta
 	char *end;
-	uint32_t index = strtoul(name + 1, &end, 10);
+	uint32_t index = strtoul(*name + 1, &end, 10);
 	if (*end != '\0') {
-		print_error("%s: meta command not found\n", name + 1);
+		print_error("%s: meta command not found\n", *name + 1);
 		return -1;
 	}
 
@@ -195,7 +196,7 @@ int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	printf("Context name: %s\n\n", ctx->name);
 	for (uint32_t i = 0; i < ctx->commands->count; i++) {
 		uint32_t index = abs_index ? i : ctx->commands->count - i - 1;
-		printf("%u: %s\n", index, (char *)vec_at_deref(ctx->commands, i));
+		printf("%u: %s\n", index, *(char *const *)vec_at(ctx->commands, i));
 	}
 
 	return 0;
@@ -236,7 +237,7 @@ int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 	}
 
 	for (uint32_t i = 0; i < all_ctxs->count; i++) {
-		const context *ctx = vec_at_deref(all_ctxs, i);
+		const context *ctx = vec_at(all_ctxs, i);
 		printf("%s", ctx->name);
 
 		if (ctx == current_ctx) {

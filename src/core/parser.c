@@ -5,8 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <c-utils/vector.h>
+
 #include "../util/helper.h"
-#include "../util/vector.h"
 #include "vars.h"
 #include "scope.h"
 #include "exec.h"
@@ -146,8 +147,8 @@ char *parser_sub(char *input_string) {
 		: strdup(temp);
 }
 
-str_vec *parser_split(char *input_string, char **end) {
-	str_vec *vec = vec_new(sizeof(char *));
+string_vector *parser_split(char *input_string, char **end) {
+	string_vector *vec = vec_new(sizeof(char *));
 
 	// Setup
 	clear_temp();
@@ -253,9 +254,10 @@ int is_assign(const char *token) {
 	return is_valid_var_name(key);
 }
 
-int is_pure_assign(const str_vec *expression) {
+int is_pure_assign(const string_vector *expression) {
 	for (uint32_t i = 0; i < expression->count; i++) {
-		if (!is_assign(vec_at_deref(expression, i))) {
+		char *const *token = vec_at(expression, i);
+		if (!is_assign(*token)) {
 			return 0;
 		}
 	}

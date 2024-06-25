@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../util/vector.h"
+#include <c-utils/vector.h>
+
+#include "../util/helper.h"
 
 /**
  * @brief Do shell substitutions and generate a new string.
@@ -19,7 +21,7 @@ char *parser_sub(char *input_string);
  * @return Split string vector.
  * @note Allocated return value.
  */
-str_vec *parser_split(char *input_string, char **end);
+string_vector *parser_split(char *input_string, char **end);
 
 /**
  * @brief Check if name is a valid variable name.
@@ -43,4 +45,4 @@ int is_assign(const char *token);
  * @param[in] expression - Argument vector.
  * @return True/False.
  */
-int is_pure_assign(const str_vec *expression);
+int is_pure_assign(const string_vector *expression);
