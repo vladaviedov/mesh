@@ -80,10 +80,12 @@ FORMAT=clang-format
 FORMAT_CHECK_FLAGS=--dry-run --Werror
 FORMAT_FIX_FLAGS=-i
 
+FORMAT_FILES=$(shell find src -type f)
+
 .PHONY: checkformat
 checkformat:
-	$(FORMAT) $(FORMAT_CHECK_FLAGS) $(SRCS)
+	$(FORMAT) $(FORMAT_CHECK_FLAGS) $(FORMAT_FILES)
 
 .PHONY: format
 format:
-	$(FORMAT) $(FORMAT_FIX_FLAGS) $(SRCS)
+	$(FORMAT) $(FORMAT_FIX_FLAGS) $(FORMAT_FILES)

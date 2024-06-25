@@ -12,9 +12,16 @@ jobs:
     strategy:
       matrix:
         cc: [ gcc, clang ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+        # Github is broken
+      - name: Submodule Tags
+        run: |
+          cd lib/c-utils
+          git fetch --tags 
       - name: build
         run: make CC=${{ matrix.cc }}
   
@@ -26,5 +33,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Submodule Tags
+        run: |
+          cd lib/c-utils
+          git fetch --tags 
       - name: build
         run: make CC=${{ matrix.cc }}
