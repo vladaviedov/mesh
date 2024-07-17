@@ -14,6 +14,7 @@
 #include "core/scope.h"
 #include "ext/context.h"
 #include "ext/meta.h"
+#include "grammar/parse.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "
@@ -157,6 +158,50 @@ void run_script(const char *filename) {
 	}
 }
 
+// debug function
+void print_ast(ast_node *node, int indent) {
+	if (node == NULL) {
+		return;
+	}
+
+	for (int i = 0; i < indent; i++) {
+		putchar('>');
+	}
+
+	switch (node->kind) {
+	case AST_KIND_SEQ:
+		printf("Sequence: %d\n", node->value.seq);
+		break;
+	case AST_KIND_COND:
+		printf("Conditional: %d\n", node->value.cond);
+		break;
+	case AST_KIND_RDR:
+		printf("Redirect: %d\n", node->value.rdr);
+		break;
+	case AST_KIND_RUN:
+		printf("Run: %d\n", node->value.run);
+		break;
+	case AST_KIND_WORD:
+		printf("Word: %s\n", node->value.str);
+		break;
+	case AST_KIND_ASSIGN:
+		printf("Assign: %s\n", node->value.str);
+		break;
+	case AST_KIND_FDNUM:
+		printf("FD: %d\n", node->value.fdnum);
+		break;
+	case AST_KIND_PIPE:
+		printf("Pipe\n");
+		break;
+	case AST_KIND_JOIN:
+		printf("Join\n");
+		break;
+	}
+
+	print_ast(node->left, indent + 1);
+	print_ast(node->right, indent + 1);
+}
+
 /**
  * @brief Process inputted command.
  *
@@ -164,24 +209,30 @@ void run_script(const char *filename) {
  * @return Status code.
  */
 int process_cmd(char *buffer) {
-	char *subbed_str = parser_sub(buffer);
-	if (subbed_str == NULL) {
-		return 0;
-	}
+	ast_node *root = parse_from_string(buffer);
+	putchar('\n');
+	print_ast(root, 0);
+	putchar('\n');
+	return 0;
 
-	// Add to context
-	if (subbed_str[0] != ':') {
-		context_add(strdup(buffer), shell_ctx);
-	}
+	/* char *subbed_str = parser_sub(buffer); */
+	/* if (subbed_str == NULL) { */
+	/* 	return 0; */
+	/* } */
 
-	char *end = subbed_str;
-	int result;
-	do {
-		string_vector *parsed_str = parser_split(end, &end);
-		result = run_dispatch(parsed_str);
-		free_with_elements(parsed_str);
-	} while (end != NULL);
+	/* // Add to context */
+	/* if (subbed_str[0] != ':') { */
+	/* 	context_add(strdup(buffer), shell_ctx); */
+	/* } */
 
-	free(subbed_str);
-	return result;
+	/* char *end = subbed_str; */
+	/* int result; */
+	/* do { */
+	/* 	string_vector *parsed_str = parser_split(end, &end); */
+	/* 	result = run_dispatch(parsed_str); */
+	/* 	free_with_elements(parsed_str); */
+	/* } while (end != NULL); */
+
+	/* free(subbed_str); */
+	/* return result; */
 }

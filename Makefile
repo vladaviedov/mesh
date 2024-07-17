@@ -8,6 +8,15 @@ CFLAGS_RELEASE=-O2
 CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
 LDFLAGS=-L$(BUILD)/lib -lutils
 
+# Is POSIX lex possible here?
+FLEX=flex
+FLEX_INPUT=$(PWD)/src/grammar/mesh.l
+FLEX_OBJ=$(BUILD)/obj/grammar/lex.yy.o
+YACC=bison -y
+YACC_FLAGS=-d
+YACC_INPUT=$(PWD)/src/grammar/mesh.y
+YACC_OBJ=$(BUILD)/obj/grammar/y.tab.o
+
 LIBUTILS_CONFIG=$(PWD)/lib/libutils.conf
 LIBUTILS=$(BUILD)/lib/libutils.a
 
@@ -22,13 +31,13 @@ OBJS=$(addprefix $(BUILD)/obj/, $(SRCS:.c=.o))
 
 # Templates
 define mk_subdir
-$(BUILD)/obj/$(1):
+$(BUILD)/obj/$(1): $(BUILD)
 	mkdir -p $$@
 endef
 
 define compile_subdir
-$(BUILD)/obj/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS)
-	$(CC) $(CFLAGS) -c $$< -o $$@
+$(BUILD)/obj/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(BUILD)/obj/$(1)
+	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
 
 # Build tasks
@@ -49,7 +58,7 @@ install:
 	# gzip -c $(MAN_PAGE) > $(PREFIX)/share/man/man1/mesh.1.gz
 
 .PHONY: build
-build: $(BUILD) $(MKSUBDIRS) $(TARGET)
+build: $(BUILD) $(TARGET)
 
 .PHONY: clean
 clean:
@@ -58,20 +67,31 @@ clean:
 $(BUILD):
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/bin
+	mkdir -p $(BUILD)/gen
+
+$(YACC_OBJ): $(YACC_INPUT) $(BUILD) $(BUILD)/obj/grammar
+	cp -v src/grammar/ast.h $(BUILD)/gen
+	cd $(BUILD)/gen && $(YACC) $(YACC_FLAGS) $<
+	$(CC) $(CFLAGS) -c -o $@ $(BUILD)/gen/y.tab.c
+
+$(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD) $(BUILD)/obj/grammar
+	cd $(BUILD)/gen && $(FLEX) $<
+	$(CC) $(CFLAGS) -c -o $@ $(BUILD)/gen/lex.yy.c
 
 $(LIBUTILS): lib/c-utils
 	$(MAKE) -C $< $(TASK) \
 		CONFIG_PATH=$(LIBUTILS_CONFIG) \
 		BUILD=$(BUILD)
 
-$(TARGET): $(LIBUTILS) $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+$(TARGET): $(BUILD) $(LIBUTILS) $(OBJS) $(YACC_OBJ) $(FLEX_OBJ)
+	$(CC) -o $@ $(OBJS) $(YACC_OBJ) $(FLEX_OBJ) $(LDFLAGS)
 
 # Build root
 $(eval $(call mk_subdir,))
 $(eval $(call compile_subdir,))
 
-# Build subdirectories
+# Build subdir
+# ectories
 $(foreach subdir, $(SUBDIRS), $(eval $(call mk_subdir,$(subdir))))
 $(foreach subdir, $(SUBDIRS), $(eval $(call compile_subdir,$(subdir))))
 

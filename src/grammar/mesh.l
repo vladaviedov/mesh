@@ -1,16 +1,17 @@
 %{
 	#include "ast.h"
 	#include "y.tab.h"
+
+	// Missing special characters
+	// This does not handle escaped quotes
 %}
 
 digit [0-9]
 alpha [a-zA-z]
-// Missing special characters
 alphanum [0-9a-zA-z]
 
 %%
 
-// This does not handle escaped quotes
 '.*' {
 	yylval.node = ast_strdup(AST_KIND_WORD, yytext);
 	return WORD;
@@ -53,6 +54,7 @@ alphanum [0-9a-zA-z]
 }
 
 \n+ { return NEWLINES; }
+.
 
 %%
 
