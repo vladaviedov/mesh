@@ -1,12 +1,19 @@
 %{
+	#include "ast.h"
+
+	extern char *yytext;
 %}
 
+%union {
+	ast_node *node;
+	ast_value value;
+}
+
 // Primary tokens
-%token NUMBER
-%token ASSIGN
-%token WORD
+%token <node> NUMBER
+%token <node> WORD
+%token <node> ASSIGNMENT
 %token NEWLINES
-%token ASSIGNMENT
 
 // sh: List operators
 %token LS_SEQ
@@ -35,68 +42,125 @@
 // sh: Pipelines
 %token PL_PIPE
 
+// Non-terminal types
+%type <node> program
+%type <node> list
+%type <node> cond_list
+%type <node> unit
+%type <node> command
+%type <node> prefix
+%type <node> body
+%type <node> redirect_list
+%type <node> redirect
+%type <value> redirect_op
+%type <value> separator
+
 %start program
 
 %%
 
-program: break list break
-	   | break
+program: break list break { $$ = $2; }
+	   | break { $$ = NULL; }
 	   ;
 
-list: list separator cond_list
-	| list separator
-	| cond_list
+list: list separator cond_list {
+	$$ = ast_make_node(AST_KIND_SEQ, $2, $1, $3);
+}
+	| list separator {
+	$$ = ast_make_node(AST_KIND_SEQ, $2, $1, NULL);
+}
+	| cond_list { $$ = $1; }
 	;
 
-cond_list: cond_list LS_AND break unit
-		 | cond_list LS_OR break unit
-		 | unit
+cond_list: cond_list LS_AND break unit {
+	$$ = ast_make_node(AST_KIND_COND, AST_COND_AND, $1, $4);
+}
+		 | cond_list LS_OR break unit {
+	$$ = ast_make_node(AST_KIND_COND, AST_COND_OR, $1, $4);
+}
+		 | unit { $$ = $1; }
 		 ;
 
-unit: unit PL_PIPE break command
-	| command
+unit: unit PL_PIPE break command {
+	$$ = ast_make_noval_node(AST_KIND_PIPE, $1, $4);
+}
+	| command { $$ = $1; }
 	;
 
-command: prefix body redirect_list
-	   | prefix body
-	   | prefix
-	   | body redirect_list
-	   | body
+command: prefix body redirect_list {
+	$$ = ast_make_node(AST_KIND_RUN, AST_RUN_APPLY,
+		$1,
+		ast_make_node(AST_KIND_RUN, AST_RUN_APPLY,
+			$3,
+			ast_make_node(AST_KIND_RUN, AST_RUN_EXECUTE, $2, NULL)
+		)
+	);
+}
+	   | prefix body {
+	$$ = ast_make_node(AST_KIND_RUN, AST_RUN_APPLY,
+		$1,
+		ast_make_node(AST_KIND_RUN, AST_RUN_EXECUTE, $2, NULL)
+	);
+}
+	   | prefix {
+	$$ = ast_make_node(AST_KIND_RUN, AST_RUN_SHELL_ENV, $1, NULL);
+}
+	   | body redirect_list {
+	$$ = ast_make_node(AST_KIND_RUN, AST_RUN_APPLY,
+		$2,
+		ast_make_node(AST_KIND_RUN, AST_RUN_EXECUTE, $1, NULL)
+	);
+}
+	   | body {
+	$$ = ast_make_node(AST_KIND_RUN, AST_RUN_EXECUTE, $1, NULL);
+}
 	   ;
 
-prefix: prefix ASSIGNMENT
-	  | prefix redirect
-	  | ASSIGNMENT
-	  | redirect
+prefix: prefix ASSIGNMENT {
+	$$ = ast_make_noval_node(AST_KIND_JOIN, $1, $2);
+}
+	  | prefix redirect {
+	$$ = ast_make_noval_node(AST_KIND_JOIN, $1, $2);
+}
+	  | ASSIGNMENT { $$ = $1; }
+	  | redirect { $$ = $1; }
 	  ;
 
-body: body WORD
-	| WORD
+body: body WORD {
+	$$ = ast_make_noval_node(AST_KIND_JOIN, $1, $2);
+}
+	| WORD { $$ = $1; }
 	;
 
-redirect_list: redirect_list redirect
-			 | redirect
+redirect_list: redirect_list redirect {
+	$$ = ast_make_noval_node(AST_KIND_JOIN, $1, $2);
+}
+			 | redirect { $$ = $1; }
 			 ;
 
-redirect: NUMBER redirect_op WORD
-		| redirect_op WORD
+redirect: NUMBER redirect_op WORD {
+	$$ = ast_make_node(AST_KIND_RDR, $2, $1, $3);
+}
+		| redirect_op WORD {
+	$$ = ast_make_node(AST_KIND_RDR, $1, 1, $2);
+}
 		;
 
-redirect_op: RO_NORMAL
-		   | RO_CLOBBER
-		   | RO_APPEND
-		   | RO_DUP
-		   | RI_NORMAL
-		   | RI_DUP
-		   | RI_IO
+redirect_op: RO_NORMAL { $$.rdr = AST_RDR_O_NORMAL; }
+		   | RO_CLOBBER { $$.rdr = AST_RDR_O_CLOBBER; }
+		   | RO_APPEND { $$.rdr = AST_RDR_O_APPEND; }
+		   | RO_DUP { $$.rdr = AST_RDR_O_DUP; }
+		   | RI_NORMAL { $$.rdr = AST_RDR_I_NORMAL; }
+		   | RI_DUP { $$.rdr = AST_RDR_I_DUP; }
+		   | RI_IO { $$.rdr = AST_RDR_I_IO; }
 		   ;
 
 break: NEWLINES
 	 | // epsilon
 	 ;
 
-separator: LS_SEQ
-		 | LS_ASYNC
+separator: LS_SEQ { $$.seq = AST_SEQ_NORMAL; }
+		 | LS_ASYNC { $$.seq = AST_SEQ_ASYNC; }
 		 ;
 
 %%
