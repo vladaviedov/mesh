@@ -9,6 +9,8 @@
 	ast_value value;
 }
 
+%parse-param {ast_node **root}
+
 // Primary tokens
 %token <node> NUMBER
 %token <node> WORD
@@ -59,8 +61,8 @@
 
 %%
 
-program: break list break { $$ = $2; }
-	   | break { $$ = NULL; }
+program: break list break { *root = $2; }
+	   | break { *root = NULL; }
 	   ;
 
 list: list separator cond_list {
