@@ -60,14 +60,84 @@ typedef struct ast_node {
 	ast_value value;
 } ast_node;
 
+/**
+ * @brief Create a sequence AST node.
+ *
+ * @param[in] value - Sequence type.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 ast_node *ast_make_seq(ast_seq_value value, ast_node *left, ast_node *right);
+
+/**
+ * @brief Create a conditional list AST node.
+ *
+ * @param[in] value - Condition type.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 ast_node *ast_make_cond(ast_cond_value value, ast_node *left, ast_node *right);
+
+/**
+ * @brief Create a redirection AST node.
+ *
+ * @param[in] value - Redirection type.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 ast_node *ast_make_rdr(ast_rdr_value value, ast_node *left, ast_node *right);
+
+/**
+ * @brief Create a run AST node.
+ *
+ * @param[in] value - Runnable kind.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 ast_node *ast_make_run(ast_run_value value, ast_node *left, ast_node *right);
+
+/**
+ * @brief Create a file descriptor AST node.
+ *
+ * @param[in] value - File descriptor.
+ * @return New AST node.
+ */
 ast_node *ast_make_fdnum(int value);
+
+/**
+ * @brief Create a pipe AST node.
+ *
+ * @param[in] left - Left node.
+ * @param[in] right - Right node. 
+ * @return New AST node.
+ */
 ast_node *ast_make_pipe(ast_node *left, ast_node *right);
+
+/**
+ * @brief Create a join AST node.
+ *
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 ast_node *ast_make_join(ast_node *left, ast_node *right);
 
+/**
+ * @brief Duplicate a string into a string-type node.
+ *
+ * @param[in] kind - String-type node kind.
+ * @param[in] value - String value.
+ * @return New AST node.
+ */
 ast_node *ast_strdup(ast_kind kind, const char *value);
 
+/**
+ * @brief Recursively free the AST.
+ *
+ * @param[in] node - Root node.
+ */
 void ast_recurse_free(ast_node *node);

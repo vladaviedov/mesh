@@ -14,7 +14,6 @@ static ast_node *ast_make_noval_node(
 		ast_node *left,
 		ast_node *right);
 
-
 ast_node *ast_make_seq(ast_seq_value value, ast_node *left, ast_node *right) {
 	ast_value astv = { .seq = value };
 	return ast_make_node(AST_KIND_SEQ, astv, left, right);
@@ -73,6 +72,15 @@ void ast_recurse_free(ast_node *node) {
 	free(node);
 }
 
+/**
+ * @brief Create a new AST node with a value.
+ *
+ * @param[in] kind - Node kind.
+ * @param[in] value - Node value.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 static ast_node *ast_make_node(
 		ast_kind kind,
 		ast_value value,
@@ -88,6 +96,14 @@ static ast_node *ast_make_node(
 	return node;
 }
 
+/**
+ * @brief Create a new AST node without a value.
+ *
+ * @param[in] kind - Node kind.
+ * @param[in] left - Left node.
+ * @param[in] right - Right node.
+ * @return New AST node.
+ */
 static ast_node *ast_make_noval_node(
 		ast_kind kind,
 		ast_node *left,
