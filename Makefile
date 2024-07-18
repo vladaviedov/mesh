@@ -12,7 +12,7 @@ LDFLAGS=-L$(BUILD)/lib -lutils
 FLEX=flex
 FLEX_INPUT=$(PWD)/src/grammar/mesh.l
 FLEX_OBJ=$(BUILD)/obj/grammar/lex.yy.o
-YACC=bison -y
+YACC=yacc
 YACC_FLAGS=-d
 YACC_INPUT=$(PWD)/src/grammar/mesh.y
 YACC_OBJ=$(BUILD)/obj/grammar/y.tab.o
@@ -72,11 +72,11 @@ $(BUILD):
 $(YACC_OBJ): $(YACC_INPUT) $(BUILD) $(BUILD)/obj/grammar
 	cp -v src/grammar/ast.h $(BUILD)/gen
 	cd $(BUILD)/gen && $(YACC) $(YACC_FLAGS) $<
-	$(CC) $(CFLAGS) -c -o $@ $(BUILD)/gen/y.tab.c
+	$(CC) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/y.tab.c
 
 $(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD) $(BUILD)/obj/grammar
 	cd $(BUILD)/gen && $(FLEX) $<
-	$(CC) $(CFLAGS) -c -o $@ $(BUILD)/gen/lex.yy.c
+	$(CC) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
 
 $(LIBUTILS): lib/c-utils
 	$(MAKE) -C $< $(TASK) \
