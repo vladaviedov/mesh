@@ -8,7 +8,15 @@
 
 digit [0-9]
 alpha [a-zA-z]
-alphanum [0-9a-zA-z]
+symbol [-\.\+\$\/]
+separator [ \t]
+escaped \\.
+
+single_quoted '({escaped}|[^'\\])*'
+double_quoted \"({escaped}|[^"\\])*\"
+
+alphanum {digit}|{alpha}
+word {alphanum}|{symbol}|{single_quoted}|{double_quoted}|{escaped}
 
 %%
 
@@ -43,18 +51,20 @@ alphanum [0-9a-zA-z]
 	return FDNUM;
 }
 
-{alpha}{alphanum}*={alphanum}+ {
+{alpha}{alphanum}*={word}+ {
 	yylval.node = ast_strdup(AST_KIND_ASSIGN, yytext);
 	return ASSIGNMENT;
 }
 
-{alphanum}+ {
+{word}+ {
 	yylval.node = ast_strdup(AST_KIND_WORD, yytext);
 	return WORD;
 }
 
 \n+ { return NEWLINES; }
-.
+{separator}+ /* Ignore */
+
+. { return LEX_ERROR; }
 
 %%
 

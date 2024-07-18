@@ -22,6 +22,7 @@
 %token <node> WORD
 %token <node> ASSIGNMENT
 %token NEWLINES
+%token LEX_ERROR
 
 // sh: List operators
 %token LS_SEQ
