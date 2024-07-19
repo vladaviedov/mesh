@@ -8,7 +8,6 @@ CFLAGS_RELEASE=-O2
 CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
 LDFLAGS=-L$(BUILD)/lib -lutils
 
-# Is POSIX lex possible here?
 FLEX=flex
 FLEX_INPUT=$(PWD)/src/grammar/mesh.l
 FLEX_OBJ=$(BUILD)/obj/grammar/lex.yy.o
