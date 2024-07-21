@@ -23,4 +23,4 @@ int exec_silent(char **argv);
  * @param[in] fd_pipe_out - Pipe to replace stdout with.
  * @return Return code.
  */
-int exec_subshell(char *cmd, int fd_pipe_out);
+int exec_subshell(const char *cmd, int fd_pipe_out);

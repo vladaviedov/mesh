@@ -15,6 +15,7 @@
 #include "ext/context.h"
 #include "ext/meta.h"
 #include "grammar/parse.h"
+#include "grammar/expand.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "
@@ -182,10 +183,10 @@ void print_ast(ast_node *node, int indent) {
 		printf("Run: %d\n", node->value.run);
 		break;
 	case AST_KIND_WORD:
-		printf("Word: %s\n", node->value.str);
+		printf("Word: %s\n", expand_word(node->value.str));
 		break;
 	case AST_KIND_ASSIGN:
-		printf("Assign: %s\n", node->value.str);
+		printf("Assign: %s\n", expand_word(node->value.str));
 		break;
 	case AST_KIND_FDNUM:
 		printf("FD: %d\n", node->value.fdnum);
@@ -209,6 +210,8 @@ void print_ast(ast_node *node, int indent) {
  * @return Status code.
  */
 int process_cmd(char *buffer) {
+	printf("%s\n", expand_word("$(ls)"));
+
 	ast_node *root = parse_from_string(buffer);
 	putchar('\n');
 	print_ast(root, 0);

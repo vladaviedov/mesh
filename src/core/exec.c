@@ -80,7 +80,12 @@ int exec_silent(char **argv) {
 	}
 }
 
-int exec_subshell(char *cmd, int fd_pipe_out) {
+int exec_subshell(const char *cmd, int fd_pipe_out) {
+	// TODO: REMOVE!!!!
+	char *out = "test";
+	write(fd_pipe_out, out, 4);
+	return 0;
+
 	pid_t pid = fork();
 
 	if (pid < 0) {
