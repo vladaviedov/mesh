@@ -52,9 +52,9 @@ char *expand_word(const char *word) {
 			word += pending;
 			pending = 0;
 
-			ch = *trav++;
+			ch = *trav;
 			if (ch == '(') {
-				char *command = parse_command(trav, &word);
+				char *command = parse_command(++trav, &word);
 				char *result = subshell_eval(command);
 				vec_bulk_push(&expanded, result, strlen(result));
 				free(command);
