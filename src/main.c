@@ -187,7 +187,7 @@ void print_ast(ast_node *node, int indent) {
 		if (node->value.run == AST_RUN_EXECUTE) {
 			string_vector v = to_argv(node->left);
 			for (uint32_t i = 0; i < v.count; i++) {
-				printf("%s ", *(char *const *)vec_at(&v, i));
+				printf("[%s] ", *(char *const *)vec_at(&v, i));
 			}
 			printf("\n");
 			return;

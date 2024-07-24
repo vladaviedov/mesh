@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include <c-utils/vector.h>
+#include <c-utils/stack.h>
 
 #include "../util/helper.h"
 #include "../grammar/ast.h"
@@ -23,17 +24,25 @@ int eval_pre_process(ast_node *root) {
 }
 
 string_vector to_argv(ast_node *target) {
-	string_vector argv = vec_init(sizeof(char *));
+	stack words = stack_init(sizeof(ast_node));
 
 	// Parser will always build the tree to the left
 	while (target->kind == AST_KIND_JOIN) {
-		add_word_to_argv(target->right, &argv);
+		stack_push(&words, target->right);
 		target = target->left;
 	}
 
 	// Left-most node
-	add_word_to_argv(target, &argv);
+	stack_push(&words, target);
+	
+	// Now process to argv
+	string_vector argv = vec_init(sizeof(char *));
+	ast_node buffer;
+	while (stack_pop(&words, &buffer) != STACK_STATUS_EMPTY) {
+		add_word_to_argv(&buffer, &argv);
+	}
 
+	stack_deinit(&words);
 	return argv;
 }
 
