@@ -8,6 +8,8 @@
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "
 
+char null_char = '\0';
+
 void *ntmalloc(size_t count, size_t type_size) {
 	void *ptr = malloc((count + 1) * type_size);
 	memset(ptr + count * type_size, 0, type_size);

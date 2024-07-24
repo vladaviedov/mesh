@@ -10,15 +10,12 @@
 #include <c-utils/vector.h>
 #include <c-utils/vector-ext.h>
 
+#include "../util/helper.h"
 #include "../core/vars.h"
 #include "../core/scope.h"
 #include "../core/exec.h"
 
 #define RD_BUF_LEN 1024
-
-typedef vector char_vector;
-
-static char null_char = '\0';
 
 static char *parse_command(const char *start, const char **end);
 static char *parse_variable(const char *start, const char **end);
@@ -40,6 +37,7 @@ char *expand_word(const char *word) {
 			break;
 		case '\'':
 			noexpand = !noexpand;
+			pending++;
 			break;
 		case '$':
 			if (noexpand) {

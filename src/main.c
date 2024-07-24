@@ -7,11 +7,13 @@
 
 #include <c-utils/vector.h>
 
+#include "grammar/ast.h"
 #include "util/helper.h"
 #include "core/vars.h"
 #include "core/parser.h"
 #include "core/run.h"
 #include "core/scope.h"
+#include "core/eval.h"
 #include "ext/context.h"
 #include "ext/meta.h"
 #include "grammar/parse.h"
@@ -160,6 +162,7 @@ void run_script(const char *filename) {
 }
 
 // debug function
+extern string_vector to_argv(ast_node *n);
 void print_ast(ast_node *node, int indent) {
 	if (node == NULL) {
 		return;
@@ -179,9 +182,18 @@ void print_ast(ast_node *node, int indent) {
 	case AST_KIND_RDR:
 		printf("Redirect: %d\n", node->value.rdr);
 		break;
-	case AST_KIND_RUN:
+	case AST_KIND_RUN: {
 		printf("Run: %d\n", node->value.run);
+		if (node->value.run == AST_RUN_EXECUTE) {
+			string_vector v = to_argv(node->left);
+			for (uint32_t i = 0; i < v.count; i++) {
+				printf("%s ", *(char *const *)vec_at(&v, i));
+			}
+			printf("\n");
+			return;
+		}
 		break;
+	}
 	case AST_KIND_WORD:
 		printf("Word: %s\n", expand_word(node->value.str));
 		break;
