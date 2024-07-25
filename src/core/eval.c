@@ -16,14 +16,35 @@ typedef enum {
 	Q_DOUBLE
 } quote_st;
 
-// static
-string_vector to_argv(ast_node *target);
+static string_vector *to_argv(ast_node *target);
 static void add_word_to_argv(ast_node *word, string_vector *argv);
 
-int eval_pre_process(ast_node *root) {
+void eval_pre_process(ast_node *node) {
+	if (node == NULL) {
+		return;
+	}
+
+	// Process AST body to argv
+	if (node->kind == AST_KIND_RUN && node->value.run == AST_RUN_EXECUTE) {
+		ast_node *exec_root = node->left;
+		node->left = ast_make_argv(to_argv(exec_root));
+		ast_recurse_free(exec_root);
+		return;
+	}
+
+	// Other strings: only expand
+	if (node->kind == AST_KIND_WORD || node->kind == AST_KIND_ASSIGN) {
+		char *value = node->value.str;
+		node->value.str = expand_word(value);
+		free(value);
+		return;
+	}
+
+	eval_pre_process(node->left);
+	eval_pre_process(node->right);
 }
 
-string_vector to_argv(ast_node *target) {
+static string_vector *to_argv(ast_node *target) {
 	stack words = stack_init(sizeof(ast_node));
 
 	// Parser will always build the tree to the left
@@ -36,10 +57,10 @@ string_vector to_argv(ast_node *target) {
 	stack_push(&words, target);
 	
 	// Now process to argv
-	string_vector argv = vec_init(sizeof(char *));
+	string_vector *argv = vec_new(sizeof(char *));
 	ast_node buffer;
 	while (stack_pop(&words, &buffer) != STACK_STATUS_EMPTY) {
-		add_word_to_argv(&buffer, &argv);
+		add_word_to_argv(&buffer, argv);
 	}
 
 	stack_deinit(&words);

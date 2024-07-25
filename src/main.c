@@ -182,23 +182,14 @@ void print_ast(ast_node *node, int indent) {
 	case AST_KIND_RDR:
 		printf("Redirect: %d\n", node->value.rdr);
 		break;
-	case AST_KIND_RUN: {
+	case AST_KIND_RUN:
 		printf("Run: %d\n", node->value.run);
-		if (node->value.run == AST_RUN_EXECUTE) {
-			string_vector v = to_argv(node->left);
-			for (uint32_t i = 0; i < v.count; i++) {
-				printf("[%s] ", *(char *const *)vec_at(&v, i));
-			}
-			printf("\n");
-			return;
-		}
 		break;
-	}
 	case AST_KIND_WORD:
-		printf("Word: %s\n", expand_word(node->value.str));
+		printf("Word: %s\n", node->value.str);
 		break;
 	case AST_KIND_ASSIGN:
-		printf("Assign: %s\n", expand_word(node->value.str));
+		printf("Assign: %s\n", node->value.str);
 		break;
 	case AST_KIND_FDNUM:
 		printf("FD: %d\n", node->value.fdnum);
@@ -208,6 +199,13 @@ void print_ast(ast_node *node, int indent) {
 		break;
 	case AST_KIND_JOIN:
 		printf("Join\n");
+		break;
+	case AST_KIND_ARGV:
+		printf("Argv: ");
+		for (uint32_t i = 0; i < node->value.argv->count; i++) {
+			printf("[%s] ", *(char **)vec_at(node->value.argv, i));
+		}
+		printf("\n");
 		break;
 	}
 
@@ -225,6 +223,7 @@ int process_cmd(char *buffer) {
 	printf("%s\n", expand_word("$(ls)"));
 
 	ast_node *root = parse_from_string(buffer);
+	eval_pre_process(root);
 	putchar('\n');
 	print_ast(root, 0);
 	putchar('\n');
