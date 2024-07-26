@@ -161,58 +161,6 @@ void run_script(const char *filename) {
 	}
 }
 
-// debug function
-extern string_vector to_argv(ast_node *n);
-void print_ast(ast_node *node, int indent) {
-	if (node == NULL) {
-		return;
-	}
-
-	for (int i = 0; i < indent; i++) {
-		putchar('>');
-	}
-
-	switch (node->kind) {
-	case AST_KIND_SEQ:
-		printf("Sequence: %d\n", node->value.seq);
-		break;
-	case AST_KIND_COND:
-		printf("Conditional: %d\n", node->value.cond);
-		break;
-	case AST_KIND_RDR:
-		printf("Redirect: %d\n", node->value.rdr);
-		break;
-	case AST_KIND_RUN:
-		printf("Run: %d\n", node->value.run);
-		break;
-	case AST_KIND_WORD:
-		printf("Word: %s\n", node->value.str);
-		break;
-	case AST_KIND_ASSIGN:
-		printf("Assign: %s\n", node->value.str);
-		break;
-	case AST_KIND_FDNUM:
-		printf("FD: %d\n", node->value.fdnum);
-		break;
-	case AST_KIND_PIPE:
-		printf("Pipe\n");
-		break;
-	case AST_KIND_JOIN:
-		printf("Join\n");
-		break;
-	case AST_KIND_ARGV:
-		printf("Argv: ");
-		for (uint32_t i = 0; i < node->value.argv->count; i++) {
-			printf("[%s] ", *(char **)vec_at(node->value.argv, i));
-		}
-		printf("\n");
-		break;
-	}
-
-	print_ast(node->left, indent + 1);
-	print_ast(node->right, indent + 1);
-}
-
 /**
  * @brief Process inputted command.
  *
@@ -220,14 +168,8 @@ void print_ast(ast_node *node, int indent) {
  * @return Status code.
  */
 int process_cmd(char *buffer) {
-	printf("%s\n", expand_word("$(ls)"));
-
 	ast_node *root = parse_from_string(buffer);
-	eval_pre_process(root);
-	putchar('\n');
-	print_ast(root, 0);
-	putchar('\n');
-	return 0;
+	return eval_ast(root);
 
 	/* char *subbed_str = parser_sub(buffer); */
 	/* if (subbed_str == NULL) { */

@@ -6,6 +6,7 @@
 #include <c-utils/stack.h>
 
 #include "../util/helper.h"
+#include "../core/run.h"
 #include "../grammar/ast.h"
 #include "../grammar/expand.h"
 
@@ -16,32 +17,115 @@ typedef enum {
 	Q_DOUBLE
 } quote_st;
 
+static int eval_seq(ast_node *seq, int carry_async);
+
+static int eval_child(ast_node *child, run_flags *flags);
+static int eval_cond(ast_node *cond, run_flags *flags);
+static int eval_pipe(ast_node *pipe, run_flags *flags);
+static int eval_run(ast_node *run, run_flags *flags);
+
 static string_vector *to_argv(ast_node *target);
 static void add_word_to_argv(ast_node *word, string_vector *argv);
 
-void eval_pre_process(ast_node *node) {
-	if (node == NULL) {
-		return;
+int eval_ast(ast_node *root) {
+	if (root->kind == AST_KIND_SEQ) {
+		return eval_seq(root, 0);
 	}
 
-	// Process AST body to argv
-	if (node->kind == AST_KIND_RUN && node->value.run == AST_RUN_EXECUTE) {
-		ast_node *exec_root = node->left;
-		node->left = ast_make_argv(to_argv(exec_root));
-		ast_recurse_free(exec_root);
-		return;
+	run_flags empty_set = {
+		.redirs = vec_init(sizeof(redir)),
+		.assigns = vec_init(sizeof(assign)),
+	};
+
+	return eval_child(root, &empty_set);
+}
+
+/* void eval_pre_process(ast_node *node) { */
+/* 	if (node == NULL) { */
+/* 		return; */
+/* 	} */
+
+/* 	// Process AST body to argv */
+/* 	if (node->kind == AST_KIND_RUN && node->value.run == AST_RUN_EXECUTE) { */
+/* 		ast_node *exec_root = node->left; */
+/* 		node->left = ast_make_argv(to_argv(exec_root)); */
+/* 		ast_recurse_free(exec_root); */
+/* 		return; */
+/* 	} */
+
+/* 	// Other strings: only expand */
+/* 	if (node->kind == AST_KIND_WORD || node->kind == AST_KIND_ASSIGN) { */
+/* 		char *value = node->value.str; */
+/* 		node->value.str = expand_word(value); */
+/* 		free(value); */
+/* 		return; */
+/* 	} */
+
+/* 	eval_pre_process(node->left); */
+/* 	eval_pre_process(node->right); */
+/* } */
+
+static int eval_child(ast_node *child, run_flags *flags) {
+	switch (child->kind) {
+	case AST_KIND_COND:
+		return eval_cond(child, flags);
+	case AST_KIND_PIPE:
+		return eval_pipe(child, flags);
+	case AST_KIND_RUN:
+		return eval_run(child, flags);
+	default:
+		return -1;
+	}
+}
+
+static int eval_seq(ast_node *seq, int carry_async) {
+	run_flags flags = {
+		.redirs = vec_init(sizeof(redir)),
+		.assigns = vec_init(sizeof(assign)),
+	};
+
+	// Left side - required
+	if (seq->left->kind == AST_KIND_SEQ) {
+		// TODO: implement async eval
+		eval_seq(seq->left, seq->value.seq == AST_SEQ_ASYNC);
+	} else {
+		eval_child(seq->left, &flags);
 	}
 
-	// Other strings: only expand
-	if (node->kind == AST_KIND_WORD || node->kind == AST_KIND_ASSIGN) {
-		char *value = node->value.str;
-		node->value.str = expand_word(value);
-		free(value);
-		return;
+	// Right side - optional
+	if (seq->right != NULL) {
+		eval_child(seq->right, &flags);
 	}
 
-	eval_pre_process(node->left);
-	eval_pre_process(node->right);
+	return 0;
+}
+
+static int eval_cond(ast_node *cond, run_flags *flags) {
+	// TODO: implement
+	print_warning("conditional not implemented\n");
+	return 0;
+}
+
+static int eval_pipe(ast_node *pipe, run_flags *flags) {
+	// TODO: implement
+	print_warning("pipes not implemented\n");
+	return 0;
+}
+
+static int eval_run(ast_node *run, run_flags *flags) {
+	ast_run_value type = run->value.run;
+
+	if (type == AST_RUN_APPLY) {
+		print_warning("apply not implemented\n");
+		return 0;
+	}
+	if (type == AST_RUN_SHELL_ENV) {
+		print_warning("shell env not implemented\n");
+		return 0;
+	}
+
+	string_vector *argv = to_argv(run->left);
+	return run_dispatch(argv, flags);
 }
 
 static string_vector *to_argv(ast_node *target) {

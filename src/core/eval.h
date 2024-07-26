@@ -2,4 +2,4 @@
 
 #include "../grammar/ast.h"
 
-void eval_pre_process(ast_node *node);
+int eval_ast(ast_node *root);

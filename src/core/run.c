@@ -7,12 +7,11 @@
 
 #include "../util/helper.h"
 #include "../ext/meta.h"
-#include "vars.h"
 #include "parser.h"
 #include "builtins.h"
 #include "exec.h"
 
-int run_dispatch(string_vector *args) {
+int run_dispatch(string_vector *args, run_flags *flags) {
 	// Meta commands
 	char *const *argv0 = vec_at(args, 0);
 	if (**argv0 == ':') {
@@ -32,7 +31,7 @@ int run_dispatch(string_vector *args) {
 		int result;
 		do {
 			string_vector *parsed_str = parser_split(end, &end);
-			result = run_dispatch(parsed_str);
+			result = run_dispatch(parsed_str, flags);
 			vec_delete(parsed_str);
 			free_with_elements(parsed_str);
 		} while (end != NULL);
