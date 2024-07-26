@@ -101,9 +101,16 @@ static int eval_seq(ast_node *seq, int carry_async) {
 }
 
 static int eval_cond(ast_node *cond, run_flags *flags) {
-	// TODO: implement
-	print_warning("conditional not implemented\n");
-	return 0;
+	int left_result = eval_child(cond->left, flags);
+
+	if (cond->value.cond == AST_COND_AND && left_result == 0) {
+		return eval_child(cond->right, flags);
+	}
+	if (cond->value.cond == AST_COND_OR && left_result != 0) {
+		return eval_child(cond->right, flags);
+	}
+
+	return left_result;
 }
 
 static int eval_pipe(ast_node *pipe, run_flags *flags) {
