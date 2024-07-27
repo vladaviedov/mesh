@@ -32,7 +32,9 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 		meta_result = eval_ast(parsed);
 		ast_recurse_free(parsed);
 
-		context_add(strdup(meta_out), NULL);
+		context_hist_add(strdup(meta_out));
+
+		free(meta_out);
 		return meta_result;
 	}
 

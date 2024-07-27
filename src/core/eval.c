@@ -134,7 +134,9 @@ static int eval_run(ast_node *run, run_flags *flags) {
 	}
 
 	string_vector *argv = to_argv(run->left);
-	return run_dispatch(argv, flags);
+	int result = run_dispatch(argv, flags);
+	free_with_elements(argv);
+	return result;
 }
 
 static string_vector *to_argv(ast_node *target) {

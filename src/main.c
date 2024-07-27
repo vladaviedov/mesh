@@ -28,14 +28,12 @@ void run_from_stream(FILE *stream);
 void run_script(const char *filename);
 int process_cmd(char *buffer);
 
-static context *shell_ctx;
-
 int main(int argc, char **argv) {
 	set_vars();
 	scope_init();
 
-	context_new("SHELL", &shell_ctx);
-	context_select("SHELL");
+	context_hist_init();
+	context_select("history");
 
 	if (argc > 1) {
 		if (argv[1][0] == '-') {
@@ -172,7 +170,7 @@ int process_cmd(char *buffer) {
 	ast_recurse_free(root);
 
 	if (buffer[0] != ':') {
-		context_add(strdup(buffer), NULL);
+		context_hist_add(strdup(buffer));
 	}
 
 	return result;
