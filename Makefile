@@ -36,7 +36,7 @@ $(BUILD)/obj/$(1): $(BUILD)
 endef
 
 define compile_subdir
-$(BUILD)/obj/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(BUILD)/obj/$(1)
+$(BUILD)/obj/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(MKSUBDIRS)
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
 
@@ -69,12 +69,12 @@ $(BUILD):
 	mkdir -p $(BUILD)/bin
 	mkdir -p $(BUILD)/gen
 
-$(YACC_OBJ): $(YACC_INPUT) $(BUILD) $(BUILD)/obj/grammar
+$(YACC_OBJ): $(YACC_INPUT) $(MKSUBDIRS)
 	cp -v src/grammar/ast.h $(BUILD)/gen
 	cd $(BUILD)/gen && $(YACC) $(YACC_FLAGS) $<
 	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/y.tab.c
 
-$(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD) $(BUILD)/obj/grammar
+$(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(MKSUBDIRS)
 	cd $(BUILD)/gen && $(FLEX) $<
 	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
 
