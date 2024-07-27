@@ -11,6 +11,9 @@
 #endif
 
 typedef vector string_vector;
+typedef vector char_vector;
+
+extern char null_char;
 
 /**
  * @brief Malloc requested space and attach a null-terminator to the end.

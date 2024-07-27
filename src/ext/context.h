@@ -5,8 +5,8 @@
 #include <c-utils/vector.h>
 
 typedef struct context {
-	const char *name;
-	vector *commands;
+	char *name;
+	vector commands;
 } context;
 
 typedef vector context_vector;
@@ -75,3 +75,16 @@ const char *context_get_row_rel(uint32_t index);
  * @return 0 on success; -1 on error
  */
 int context_add(const char *command, context *ctx);
+
+/**
+ * @brief Create the history context.
+ */
+int context_hist_init(void);
+
+/**
+ * @brief Add new command to history.
+ *
+ * @param[in] command - Command to add.
+ * @return 0 on success; -1 on error
+ */
+int context_hist_add(const char *command);

@@ -10,6 +10,8 @@
 static context_vector *contexts = NULL;
 static context *current_ctx = NULL;
 
+static context *history = NULL;
+
 int find_context_idx(const char *name, uint32_t *index);
 context *find_context(const char *name);
 
@@ -21,14 +23,14 @@ int context_new(const char *name, context **ctx_out) {
 		return -1;
 	}
 
-	context *ctx = malloc(sizeof(context));
+	context ctx = {
+		.name = strdup(name),
+		.commands = vec_init(sizeof(char *)),
+	};
 
-	ctx->name = strdup(name);
-	ctx->commands = vec_new(sizeof(char *));
-
-	vec_push(contexts, ctx);
+	vec_push(contexts, &ctx);
 	if (ctx_out != NULL) {
-		*ctx_out = ctx;
+		*ctx_out = vec_at_mut(contexts, contexts->count - 1);
 	}
 
 	return 0;
@@ -46,14 +48,14 @@ int context_delete(const char *name) {
 	}
 
 	// Remove from element
-	context *deleted;
+	context deleted;
 	if (vec_erase(contexts, index, &deleted) < 0) {
 		return -1;
 	}
 
 	// Delete context
-	free((void *)deleted->name);
-	free_with_elements(deleted->commands);
+	free(deleted.name);
+	free_with_elements(&deleted.commands);
 
 	return 0;
 }
@@ -90,7 +92,7 @@ const char *context_get_row_abs(uint32_t index) {
 		return NULL;
 	}
 
-	return *(char *const *)vec_at(current_ctx->commands, index);
+	return *(char *const *)vec_at(&current_ctx->commands, index);
 }
 
 const char *context_get_row_rel(uint32_t index) {
@@ -99,7 +101,7 @@ const char *context_get_row_rel(uint32_t index) {
 		return NULL;
 	}
 
-	return *(char *const *)vec_at(current_ctx->commands, current_ctx->commands->count - index - 1);
+	return *(char *const *)vec_at(&current_ctx->commands, current_ctx->commands.count - index - 1);
 }
 
 int context_add(const char *command, context *ctx) {
@@ -112,8 +114,16 @@ int context_add(const char *command, context *ctx) {
 		ctx = current_ctx;
 	}
 
-	vec_push(ctx->commands, &command);
+	vec_push(&ctx->commands, &command);
 	return 0;
+}
+
+int context_hist_init(void) {
+	return context_new("history", &history);
+}
+
+int context_hist_add(const char *command) {
+	return context_add(command, history);
 }
 
 /** Internal functions */

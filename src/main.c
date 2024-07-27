@@ -7,13 +7,16 @@
 
 #include <c-utils/vector.h>
 
+#include "grammar/ast.h"
 #include "util/helper.h"
 #include "core/vars.h"
-#include "core/parser.h"
 #include "core/run.h"
 #include "core/scope.h"
+#include "core/eval.h"
 #include "ext/context.h"
 #include "ext/meta.h"
+#include "grammar/parse.h"
+#include "grammar/expand.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "
@@ -25,14 +28,12 @@ void run_from_stream(FILE *stream);
 void run_script(const char *filename);
 int process_cmd(char *buffer);
 
-static context *shell_ctx;
-
 int main(int argc, char **argv) {
 	set_vars();
 	scope_init();
 
-	context_new("SHELL", &shell_ctx);
-	context_select("SHELL");
+	context_hist_init();
+	context_select("history");
 
 	if (argc > 1) {
 		if (argv[1][0] == '-') {
@@ -164,24 +165,13 @@ void run_script(const char *filename) {
  * @return Status code.
  */
 int process_cmd(char *buffer) {
-	char *subbed_str = parser_sub(buffer);
-	if (subbed_str == NULL) {
-		return 0;
+	ast_node *root = parse_from_string(buffer);
+	int result = eval_ast(root);
+	ast_recurse_free(root);
+
+	if (buffer[0] != ':') {
+		context_hist_add(strdup(buffer));
 	}
 
-	// Add to context
-	if (subbed_str[0] != ':') {
-		context_add(strdup(buffer), shell_ctx);
-	}
-
-	char *end = subbed_str;
-	int result;
-	do {
-		string_vector *parsed_str = parser_split(end, &end);
-		result = run_dispatch(parsed_str);
-		free_with_elements(parsed_str);
-	} while (end != NULL);
-
-	free(subbed_str);
 	return result;
 }

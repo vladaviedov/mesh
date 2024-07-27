@@ -194,9 +194,9 @@ int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 
 	// Print context information
 	printf("Context name: %s\n\n", ctx->name);
-	for (uint32_t i = 0; i < ctx->commands->count; i++) {
-		uint32_t index = abs_index ? i : ctx->commands->count - i - 1;
-		printf("%u: %s\n", index, *(char *const *)vec_at(ctx->commands, i));
+	for (uint32_t i = 0; i < ctx->commands.count; i++) {
+		uint32_t index = abs_index ? i : ctx->commands.count - i - 1;
+		printf("%u: %s\n", index, *(char *const *)vec_at(&ctx->commands, i));
 	}
 
 	return 0;
