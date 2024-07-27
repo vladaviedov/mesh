@@ -40,31 +40,13 @@ int eval_ast(ast_node *root) {
 	return eval_child(root, &empty_set);
 }
 
-/* void eval_pre_process(ast_node *node) { */
-/* 	if (node == NULL) { */
-/* 		return; */
-/* 	} */
-
-/* 	// Process AST body to argv */
-/* 	if (node->kind == AST_KIND_RUN && node->value.run == AST_RUN_EXECUTE) { */
-/* 		ast_node *exec_root = node->left; */
-/* 		node->left = ast_make_argv(to_argv(exec_root)); */
-/* 		ast_recurse_free(exec_root); */
-/* 		return; */
-/* 	} */
-
-/* 	// Other strings: only expand */
-/* 	if (node->kind == AST_KIND_WORD || node->kind == AST_KIND_ASSIGN) { */
-/* 		char *value = node->value.str; */
-/* 		node->value.str = expand_word(value); */
-/* 		free(value); */
-/* 		return; */
-/* 	} */
-
-/* 	eval_pre_process(node->left); */
-/* 	eval_pre_process(node->right); */
-/* } */
-
+/**
+ * @brief Evaluate child structure AST node (auto select by type).
+ *
+ * @param[in] child - Child node.
+ * @param[in] flags - Run flags.
+ * @return Evaluation result.
+ */
 static int eval_child(ast_node *child, run_flags *flags) {
 	switch (child->kind) {
 	case AST_KIND_COND:
@@ -78,6 +60,13 @@ static int eval_child(ast_node *child, run_flags *flags) {
 	}
 }
 
+/**
+ * @brief Evaluate sequence node.
+ *
+ * @param[in] seq - Sequence node.
+ * @param[in] carry_async - Whether the right child should be run async.
+ * @return Evaluation result.
+ */
 static int eval_seq(ast_node *seq, int carry_async) {
 	run_flags flags = {
 		.redirs = vec_init(sizeof(redir)),
@@ -102,6 +91,13 @@ static int eval_seq(ast_node *seq, int carry_async) {
 	return result;
 }
 
+/**
+ * @brief Evaluate conditional list node.
+ *
+ * @param[in] cond - Conditional list.
+ * @param[in] flags - Run flags.
+ * @return Evaluation result.
+ */
 static int eval_cond(ast_node *cond, run_flags *flags) {
 	int left_result = eval_child(cond->left, flags);
 
@@ -115,12 +111,26 @@ static int eval_cond(ast_node *cond, run_flags *flags) {
 	return left_result;
 }
 
+/**
+ * @brief Evaluate command with pipes.
+ *
+ * @param[in] pipe - Pipe node.
+ * @param[in] flags - Run flags.
+ * @return Evaluation result.
+ */
 static int eval_pipe(ast_node *pipe, run_flags *flags) {
 	// TODO: implement
 	print_warning("pipes not implemented\n");
 	return 0;
 }
 
+/**
+ * @brief Evaluate runnable AST nodes.
+ *
+ * @param[in] run - Runnable node.
+ * @param[in] flags - Run flags.
+ * @return Evaluation result.
+ */
 static int eval_run(ast_node *run, run_flags *flags) {
 	ast_run_value type = run->value.run;
 
@@ -139,6 +149,12 @@ static int eval_run(ast_node *run, run_flags *flags) {
 	return result;
 }
 
+/**
+ * @brief Convert a command body into an argument vector.
+ *
+ * @param[in] target - Command body root node.
+ * @return Argument vector.
+ */
 static string_vector *to_argv(ast_node *target) {
 	stack words = stack_init(sizeof(ast_node));
 
@@ -162,6 +178,12 @@ static string_vector *to_argv(ast_node *target) {
 	return argv;
 }
 
+/**
+ * @brief Extract data from a word AST node into the argument vector.
+ *
+ * @param[in] word - AST node.
+ * @param[in,out] argv - Argument vector being constructed.
+ */
 static void add_word_to_argv(ast_node *word, string_vector *argv) {
 	char *expanded = expand_word(word->value.str);
 

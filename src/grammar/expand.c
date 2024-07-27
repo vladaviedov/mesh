@@ -94,6 +94,13 @@ char *expand_word(const char *word) {
 	return vec_collect(&expanded);
 }
 
+/**
+ * @brief Parse a command.
+ *
+ * @param[in] start - Parse starting from here.
+ * @param[out] end - Pointer after the characters consumed by the substitution.
+ * @return Parsed command.
+ */
 static char *parse_command(const char *start, const char **end) {
 	char *closing = strchr(start, ')');
 	// TODO: does this happen?
@@ -105,6 +112,13 @@ static char *parse_command(const char *start, const char **end) {
 	return strndup(start, closing - start);
 }
 
+/**
+ * @brief Parse a valid variable name.
+ *
+ * @param[in] start - Parse starting from here.
+ * @param[out] end - Pointer after the characters consumed by the variable name.
+ * @return Parsed variable name.
+ */
 static char *parse_variable(const char *start, const char **end) {
 	// Handle special variables
 	switch (*start) {
@@ -128,6 +142,12 @@ static char *parse_variable(const char *start, const char **end) {
 	return strndup(start, trav - start);
 }
 
+/**
+ * @brief Evaluate a command in a subshell.
+ *
+ * @param[in] command - Command to run.
+ * @return Command output.
+ */
 static char *subshell_eval(const char *command) {
 	int pipe_fds[2];
 	if (pipe(pipe_fds) < 0) {
