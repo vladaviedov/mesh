@@ -61,3 +61,12 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 	// Exec program
 	return exec_normal(argv);
 }
+
+run_flags copy_flags(const run_flags *flags) {
+	run_flags new_flags = {
+		.redirs = vec_init_clone(&flags->redirs),
+		.assigns = vec_init_clone(&flags->assigns),
+	};
+
+	return new_flags;
+}

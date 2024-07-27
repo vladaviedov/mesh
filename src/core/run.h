@@ -39,3 +39,11 @@ typedef struct {
  * @return Status code.
  */
 int run_dispatch(string_vector *args, run_flags *flags);
+
+/**
+ * @brief Copy all flags into a new structure.
+ *
+ * @param[in] flags - Original flags.
+ * @return New flag structure.
+ */
+run_flags copy_flags(const run_flags *flags);

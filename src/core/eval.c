@@ -9,7 +9,9 @@
 #define _POSIX_C_SOURCE 200809L
 #include "eval.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <c-utils/stack.h>
 #include <c-utils/vector.h>
@@ -30,7 +32,7 @@ static int eval_seq(ast_node *seq, int carry_async);
 
 static int eval_child(ast_node *child, run_flags *flags);
 static int eval_cond(ast_node *cond, run_flags *flags);
-static int eval_pipe(ast_node *pipe, run_flags *flags);
+static int eval_pipe(ast_node *pipeline, run_flags *flags);
 static int eval_run(ast_node *run, run_flags *flags);
 
 static string_vector *to_argv(ast_node *target);
@@ -123,14 +125,33 @@ static int eval_cond(ast_node *cond, run_flags *flags) {
 /**
  * @brief Evaluate command with pipes.
  *
- * @param[in] pipe - Pipe node.
+ * @param[in] pipeline - Pipe node.
  * @param[in] flags - Run flags.
  * @return Evaluation result.
  */
-static int eval_pipe(ast_node *pipe, run_flags *flags) {
-	// TODO: implement
-	print_warning("pipes not implemented\n");
-	return 0;
+static int eval_pipe(ast_node *pipeline, run_flags *flags) {
+	int pipe_fds[2];
+	if (pipe_nonblock(pipe_fds) < 0) {
+		return -1;
+	}
+
+	// Redirect left commmand's output to the write end
+	run_flags left_flags = copy_flags(flags);
+	redir output = {
+		.fd_from = STDOUT_FILENO,
+		.fd_to = pipe_fds[1],
+	};
+	vec_push(&left_flags.redirs, &output);
+	eval_child(pipeline->left, &left_flags);
+
+	// Redirect read end to right command's input
+	run_flags right_flags = copy_flags(flags);
+	redir input = {
+		.fd_from = pipe_fds[0],
+		.fd_to = STDIN_FILENO,
+	};
+	vec_push(&right_flags.redirs, &input);
+	return eval_child(pipeline->right, &right_flags);
 }
 
 /**
