@@ -13,15 +13,10 @@
 #include <string.h>
 
 static ast_node *ast_make_node(
-		ast_kind kind,
-		ast_value value,
-		ast_node *left,
-		ast_node *right);
+	ast_kind kind, ast_value value, ast_node *left, ast_node *right);
 
 static ast_node *ast_make_noval_node(
-		ast_kind kind,
-		ast_node *left,
-		ast_node *right);
+	ast_kind kind, ast_node *left, ast_node *right);
 
 ast_node *ast_make_seq(ast_seq_value value, ast_node *left, ast_node *right) {
 	ast_value astv = { .seq = value };
@@ -96,10 +91,7 @@ void ast_recurse_free(ast_node *node) {
  * @return New AST node.
  */
 static ast_node *ast_make_node(
-		ast_kind kind,
-		ast_value value,
-		ast_node *left,
-		ast_node *right) {
+	ast_kind kind, ast_value value, ast_node *left, ast_node *right) {
 	ast_node *node = malloc(sizeof(ast_node));
 
 	node->kind = kind;
@@ -119,9 +111,7 @@ static ast_node *ast_make_node(
  * @return New AST node.
  */
 static ast_node *ast_make_noval_node(
-		ast_kind kind,
-		ast_node *left,
-		ast_node *right) {
+	ast_kind kind, ast_node *left, ast_node *right) {
 	ast_node *node = malloc(sizeof(ast_node));
 
 	node->kind = kind;
@@ -133,4 +123,3 @@ static ast_node *ast_make_noval_node(
 
 	return node;
 }
-

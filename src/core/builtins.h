@@ -9,6 +9,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include <c-utils/vector.h>
 
 #include "../util/helper.h"

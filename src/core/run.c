@@ -14,14 +14,14 @@
 
 #include <c-utils/vector.h>
 
-#include "../util/helper.h"
-#include "../ext/meta.h"
 #include "../ext/context.h"
-#include "../grammar/parse.h"
+#include "../ext/meta.h"
 #include "../grammar/ast.h"
+#include "../grammar/parse.h"
+#include "../util/helper.h"
 #include "builtins.h"
-#include "exec.h"
 #include "eval.h"
+#include "exec.h"
 
 int run_dispatch(string_vector *args, run_flags *flags) {
 	// Meta commands
@@ -52,7 +52,7 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 	if (code >= 0) {
 		return code;
 	}
-	
+
 	// Add null-terminator to args
 	char *argv[args->count + 1];
 	memcpy(argv, args->data, args->count * sizeof(char *));

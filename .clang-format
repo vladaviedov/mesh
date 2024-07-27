@@ -1,0 +1,40 @@
+BasedOnStyle: "LLVM"
+BreakBeforeBinaryOperators: All
+BreakBeforeTernaryOperators: true
+AlignAfterOpenBracket: "DontAlign"
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: "Empty"
+BinPackParameters: false
+Cpp11BracedListStyle: false
+EmptyLineBeforeAccessModifier: "Always"
+IncludeBlocks: "Regroup"
+IncludeCategories:
+  - Regex: '^".*'
+    Priority: 3
+    CaseSensitive: true
+  - Regex: '^<c-utils/'
+    Priority: 2
+    CaseSensitive: true
+  - Regex: '^<.*'
+    Priority: 1
+    CaseSensitive: true
+IndentGotoLabels: false
+IndentPPDirectives: "None"
+IndentWidth: 4
+InsertNewlineAtEOF: true
+InsertTrailingCommas: "None"
+KeepEmptyLinesAtTheStartOfBlocks: false
+Language: "Cpp"
+LineEnding: "LF"
+NamespaceIndentation: "All"
+PackConstructorInitializers: "Never"
+QualifierAlignment: "Left"
+RemoveParentheses: "ReturnStatement"
+RemoveSemicolon: true
+SeparateDefinitionBlocks: "Always"
+SpaceAfterTemplateKeyword: false
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: 1
+TabWidth: 4
+UseTab: "ForContinuationAndIndentation"

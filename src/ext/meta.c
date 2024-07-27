@@ -15,9 +15,9 @@
 
 #include <c-utils/vector.h>
 
-#include "../util/helper.h"
-#include "../core/vars.h"
 #include "../core/exec.h"
+#include "../core/vars.h"
+#include "../util/helper.h"
 #include "context.h"
 
 static int abs_index = 0;
@@ -36,7 +36,8 @@ static int meta_asroot(uint32_t argc, char **argv, char **command);
 // "Hidden" meta commands
 static int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
-static int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
+static int meta_ctx_ls(
+	uint32_t argc, unused char **argv, unused char **command);
 static int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
@@ -50,7 +51,7 @@ static const meta registry[] = {
 	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 },
 	{ .name = ":_ctx_make", .func = &meta_ctx_make, .hidden = 1 },
 	{ .name = ":_ctx_new", .func = &meta_ctx_new, .hidden = 1 },
-	{ .name = ":_ctx_del", .func = &meta_ctx_del, .hidden = 1 }
+	{ .name = ":_ctx_del", .func = &meta_ctx_del, .hidden = 1 },
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -65,7 +66,7 @@ int run_meta(string_vector *args, char **command) {
 	if (result != NULL) {
 		if (result->hidden) {
 			print_warning("this command is not intended to be called directly "
-				"from the shell\n");
+						  "from the shell\n");
 		}
 
 		return result->func(args->count, args->data, command);
@@ -79,9 +80,8 @@ int run_meta(string_vector *args, char **command) {
 		return -1;
 	}
 
-	const char *num_result = abs_index
-		? context_get_row_abs(index)
-		: context_get_row_rel(index);
+	const char *num_result
+		= abs_index ? context_get_row_abs(index) : context_get_row_rel(index);
 	if (num_result == NULL) {
 		print_error("no such command in context\n");
 		return -1;
@@ -118,15 +118,15 @@ static int meta_abs(uint32_t argc, char **argv, unused char **command) {
 
 	if (argc == 2) {
 		switch (argv[1][0]) {
-			case '0':
-				abs_index = 0;
-				break;
-			case '1':
-				abs_index = 1;
-				break;
-			default:
-				print_error("invalid argument\n");
-				return -1;
+		case '0':
+			abs_index = 0;
+			break;
+		case '1':
+			abs_index = 1;
+			break;
+		default:
+			print_error("invalid argument\n");
+			return -1;
 		}
 	} else {
 		abs_index = !abs_index;
@@ -158,9 +158,8 @@ static int meta_asroot(uint32_t argc, char **argv, char **command) {
 		}
 	}
 
-	const char *result = abs_index
-		? context_get_row_abs(index)
-		: context_get_row_rel(index);
+	const char *result
+		= abs_index ? context_get_row_abs(index) : context_get_row_rel(index);
 	if (result == NULL) {
 		print_error("no such command in context\n");
 		return -1;
@@ -189,9 +188,7 @@ static int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	}
 
 	// Get context
-	const context *ctx = (argc == 2)
-		? context_get(argv[1])
-		: context_get(NULL);
+	const context *ctx = (argc == 2) ? context_get(argv[1]) : context_get(NULL);
 
 	if (ctx == NULL) {
 		if (argc == 2) {
@@ -231,7 +228,8 @@ static int meta_ctx_set(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-static int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
+static int meta_ctx_ls(
+	uint32_t argc, unused char **argv, unused char **command) {
 	if (argc > 1) {
 		print_error("too many arguments\n");
 		return -1;
@@ -239,7 +237,7 @@ static int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command)
 
 	const context *current_ctx = context_get(NULL);
 	const context_vector *all_ctxs = context_get_all();
-	
+
 	if (all_ctxs == NULL) {
 		print_error("context system not initialized\n");
 		return -1;
@@ -329,6 +327,7 @@ static const meta *find_meta(const char *name) {
 }
 
 static const char *root_prog;
+
 /**
  * @brief Get an installed program for becoming root.
  *
@@ -350,7 +349,7 @@ static const char *get_root_program(void) {
 		root_prog = "doas";
 		return root_prog;
 	}
-	
+
 	// Check for 'sudo'
 	char *sudo_check[] = { "which", "sudo", NULL };
 	if (exec_silent(sudo_check) == 0) {

@@ -11,18 +11,18 @@
 
 #include <ctype.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <c-utils/vector.h>
 #include <c-utils/vector-ext.h>
+#include <c-utils/vector.h>
 
-#include "../util/helper.h"
-#include "../core/vars.h"
-#include "../core/scope.h"
 #include "../core/exec.h"
+#include "../core/scope.h"
+#include "../core/vars.h"
+#include "../util/helper.h"
 
 #define RD_BUF_LEN 1024
 
@@ -182,7 +182,7 @@ static char *subshell_eval(const char *command) {
 		vec_deinit(&output);
 		return NULL;
 	}
-	
+
 	vec_push(&output, &null_char);
 	char *data = vec_collect(&output);
 	return data;

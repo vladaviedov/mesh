@@ -100,7 +100,7 @@ FORMAT=clang-format
 FORMAT_CHECK_FLAGS=--dry-run --Werror
 FORMAT_FIX_FLAGS=-i
 
-FORMAT_FILES=$(shell find src -type f)
+FORMAT_FILES=$(shell find src -type f -name '*.c' -o -name '*.h')
 
 .PHONY: checkformat
 checkformat:

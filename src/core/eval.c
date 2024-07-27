@@ -11,13 +11,13 @@
 
 #include <stdlib.h>
 
-#include <c-utils/vector.h>
 #include <c-utils/stack.h>
+#include <c-utils/vector.h>
 
-#include "../util/helper.h"
 #include "../core/run.h"
 #include "../grammar/ast.h"
 #include "../grammar/expand.h"
+#include "../util/helper.h"
 
 // Track quote state
 typedef enum {
@@ -175,7 +175,7 @@ static string_vector *to_argv(ast_node *target) {
 
 	// Left-most node
 	stack_push(&words, target);
-	
+
 	// Now process to argv
 	string_vector *argv = vec_new(sizeof(char *));
 	ast_node buffer;

@@ -6,26 +6,26 @@
  * @license GPLv3.0
  */
 #define _POSIX_C_SOURCE 200809L
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
-#include <errno.h>
 #include <unistd.h>
 
-#include <c-utils/vector.h>
 #include <c-utils/nanorl.h>
+#include <c-utils/vector.h>
 
-#include "grammar/ast.h"
-#include "util/helper.h"
-#include "core/vars.h"
+#include "core/eval.h"
 #include "core/run.h"
 #include "core/scope.h"
-#include "core/eval.h"
+#include "core/vars.h"
 #include "ext/context.h"
 #include "ext/meta.h"
-#include "grammar/parse.h"
+#include "grammar/ast.h"
 #include "grammar/expand.h"
+#include "grammar/parse.h"
+#include "util/helper.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "
@@ -46,7 +46,8 @@ int main(int argc, char **argv) {
 
 	if (argc > 1) {
 		if (argv[1][0] == '-') {
-			if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
+			if (strcmp(argv[1], "--version") == 0
+				|| strcmp(argv[1], "-v") == 0) {
 				printf("mesh version 0.2.0\n");
 				return 0;
 			}
@@ -125,7 +126,6 @@ void run_from_stream(FILE *stream) {
 	free(input);
 }
 
-
 /**
  * @brief Load environment and set shell variables.
  */
@@ -145,7 +145,7 @@ static void set_vars(void) {
 	char pid_str[PID_STR_MAX_LEN];
 	snprintf(pid_str, PID_STR_MAX_LEN, "%d", pid);
 	vars_set("$", pid_str);
-	
+
 	// PWD
 	char *pwd = getcwd(NULL, 0);
 	vars_set("PWD", pwd);
@@ -160,7 +160,7 @@ static void set_vars(void) {
 static void run_script(const char *filename) {
 	FILE *script = fopen(filename, "r");
 	if (!script) {
-		print_error("failed to open file: %s\n", strerror(errno));	
+		print_error("failed to open file: %s\n", strerror(errno));
 		return;
 	}
 

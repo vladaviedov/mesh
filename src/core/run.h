@@ -16,12 +16,14 @@ typedef struct {
 	int fd_from;
 	int fd_to;
 } redir;
+
 typedef vector redir_vector;
 
 typedef struct {
 	char *key;
 	char *value;
 } assign;
+
 typedef vector assign_vector;
 
 typedef struct {

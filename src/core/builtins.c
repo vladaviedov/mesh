@@ -9,11 +9,11 @@
 #define _POSIX_C_SOURCE 200809L
 #include "builtins.h"
 
+#include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <signal.h>
 #include <unistd.h>
 
 #include <c-utils/vector.h>
@@ -45,7 +45,7 @@ static const builtin registry[] = {
 	{ .name = "cd", .func = &shell_cd },
 	{ .name = "set", .func = &shell_set },
 	{ .name = "export", .func = &shell_export },
-	{ .name = "exec", .func = &shell_exec }
+	{ .name = "exec", .func = &shell_exec },
 };
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
@@ -89,7 +89,7 @@ static int shell_exit(uint32_t argc, char **argv) {
 	if (argc == 2) {
 		char *end;
 		int code = strtol(argv[1], &end, 10);
-		
+
 		// If string is not only numbers
 		if (*end != '\0') {
 			print_error("exit: invalid exit code '%s'\n", argv[1]);
@@ -109,9 +109,7 @@ static int shell_cd(uint32_t argc, char **argv) {
 	}
 
 	// Get target path
-	const char *path = (argc == 1)
-		? vars_get("HOME")
-		: argv[1];
+	const char *path = (argc == 1) ? vars_get("HOME") : argv[1];
 	if (strcmp(path, "-") == 0) {
 		if ((path = vars_get("OLDPWD")) == NULL) {
 			print_error("cd: nowhere to go\n");

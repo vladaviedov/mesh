@@ -59,7 +59,7 @@ typedef union {
 	ast_seq_value seq;
 	ast_cond_value cond;
 	ast_rdr_value rdr;
-    ast_run_value run;
+	ast_run_value run;
 
 	char *str;
 	int fdnum;
@@ -128,7 +128,7 @@ ast_node *ast_make_fdnum(int value);
  * @brief Create a pipe AST node.
  *
  * @param[in] left - Left node.
- * @param[in] right - Right node. 
+ * @param[in] right - Right node.
  * @return New AST node.
  */
 ast_node *ast_make_pipe(ast_node *left, ast_node *right);

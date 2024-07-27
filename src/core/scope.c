@@ -9,13 +9,13 @@
 #define _POSIX_C_SOURCE 200809L
 #include "scope.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
-#include <c-utils/vector.h>
 #include <c-utils/stack.h>
+#include <c-utils/vector.h>
 
 #include "../util/helper.h"
 
@@ -96,11 +96,11 @@ uint32_t scope_pos_count(void) {
 }
 
 void scope_append_pos(const char *value) {
+	// 1-indexed
 	scoped_var new_pos = {
-		// 1-indexed
 		.key.pos = frame.pos_count + 1,
 		.value = strdup(value),
-		.is_pos = 1
+		.is_pos = 1,
 	};
 
 	vec_push(&frame.vars, &new_pos);

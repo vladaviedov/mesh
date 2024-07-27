@@ -11,11 +11,11 @@
 
 #include <stdlib.h>
 
-#include "ast.h"
 #include "../util/helper.h"
+#include "ast.h"
 
 // Needed to interface with Flex & Yacc
-typedef void * YY_BUFFER_STATE;
+typedef void *YY_BUFFER_STATE;
 extern int yyparse(ast_node **root);
 extern YY_BUFFER_STATE yy_scan_string(const char *str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);

@@ -9,10 +9,10 @@
 #define _POSIX_C_SOURCE 200809L
 #include "helper.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "

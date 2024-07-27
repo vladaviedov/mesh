@@ -51,7 +51,7 @@ void vars_import(const char **env) {
 		sh_var var = {
 			.key = strdup(key),
 			.value = (value == NULL) ? strdup("") : strdup(value),
-			.is_export = 1
+			.is_export = 1,
 		};
 
 		free(copy);
@@ -93,7 +93,7 @@ void vars_set(const char *key, const char *value) {
 		sh_var new_var = {
 			.key = strdup(key),
 			.value = (value == NULL) ? strdup("") : strdup(value),
-			.is_export = 0
+			.is_export = 0,
 		};
 		vec_push(env_vars, &new_var);
 	} else {
@@ -170,7 +170,7 @@ void vars_print_all(int export_flag) {
 static char *sh_var_to_string(const sh_var *var) {
 	size_t str_len = strlen(var->key) + strlen(var->value) + 1;
 	char *str = ntmalloc(str_len, sizeof(char));
-	
+
 	if (snprintf(str, str_len + 1, "%s=%s", var->key, var->value) < 0) {
 		return NULL;
 	}

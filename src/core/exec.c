@@ -9,14 +9,14 @@
 #define _POSIX_C_SOURCE 200809L
 #include "exec.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "../util/helper.h"
 #include "vars.h"
