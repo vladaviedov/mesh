@@ -6,12 +6,13 @@ Unix shell implementation (incomplete) but with meta commands.
 ## Requirements
 
 - C99-capable tool chain.
+- GNU make.
 - Yacc.
 - Flex.
-- GNU make.
 
 ## Build
 ```
+git submodule update --init
 make
 ```
 
