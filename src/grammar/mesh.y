@@ -1,3 +1,12 @@
+/**
+ * @file grammar/mesh.y
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2024
+ * @license GPLv3.0
+ * @brief Shell grammar definition.
+ * @note Based on POSIX.1-2017: Shell Command Language, Section 2.10
+ */
 %{
 	#include <stdio.h>
 	#include <stdlib.h>
@@ -42,11 +51,6 @@
 %token RI_IO
 // %token RI_HEREDOC
 // %token RI_HEREDOC_NOTAB
-
-// sh: Expansions
-// %token EX_PARAM
-// %token EX_HOME
-// %token EX_GLOB
 
 // sh: Pipelines
 %token PL_PIPE

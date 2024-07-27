@@ -1,3 +1,11 @@
+/**
+ * @file core/scope.h
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Variable scope frames.
+ */
 #pragma once
 
 #include <stdint.h>

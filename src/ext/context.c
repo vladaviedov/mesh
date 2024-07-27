@@ -1,3 +1,11 @@
+/**
+ * @file ext/context.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Mesh context manipulation.
+ */
 #include "context.h"
 
 #include <stdlib.h>
@@ -12,8 +20,8 @@ static context *current_ctx = NULL;
 
 static context *history = NULL;
 
-int find_context_idx(const char *name, uint32_t *index);
-context *find_context(const char *name);
+static int find_context_idx(const char *name, uint32_t *index);
+static context *find_context(const char *name);
 
 int context_new(const char *name, context **ctx_out) {
 	if (contexts == NULL) {
@@ -135,7 +143,7 @@ int context_hist_add(const char *command) {
  * @param[out] index - Index of element.
  * @return Boolean result - found or not.
  */
-int find_context_idx(const char *name, uint32_t *index) {
+static int find_context_idx(const char *name, uint32_t *index) {
 	for (uint32_t i = 0; i < contexts->count; i++) {
 		const context *ctx = vec_at(contexts, i);
 		if (strcmp(ctx->name, name) == 0) {
@@ -153,7 +161,7 @@ int find_context_idx(const char *name, uint32_t *index) {
  * @param[in] name - Query.
  * @return Context object; NULL on error.
  */
-context *find_context(const char *name) {
+static context *find_context(const char *name) {
 	uint32_t index;
 	if (find_context_idx(name, &index)) {
 		return vec_at_mut(contexts, index);

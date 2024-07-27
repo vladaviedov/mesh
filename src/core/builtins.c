@@ -1,3 +1,11 @@
+/**
+ * @file core/builtins.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Shell built-ins.
+ */
 #include "builtins.h"
 
 #include <stdio.h>
@@ -24,11 +32,11 @@ typedef struct {
 } builtin;
 
 // Builtin functions
-int shell_exit(uint32_t argc, char **argv);
-int shell_cd(uint32_t argc, char **argv);
-int shell_set(uint32_t argc, char **argv);
-int shell_export(uint32_t argc, char **argv);
-int shell_exec(uint32_t argc, char **argv);
+static int shell_exit(uint32_t argc, char **argv);
+static int shell_cd(uint32_t argc, char **argv);
+static int shell_set(uint32_t argc, char **argv);
+static int shell_export(uint32_t argc, char **argv);
+static int shell_exec(uint32_t argc, char **argv);
 
 // Builtin registry
 static const builtin registry[] = {
@@ -41,7 +49,7 @@ static const builtin registry[] = {
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
 // Helper functions
-const builtin *find_builtin(const char *name);
+static const builtin *find_builtin(const char *name);
 
 int pure_assign(uint32_t count, char **args, int export_flag) {
 	for (uint32_t i = 0; i < count; i++) {
@@ -71,7 +79,7 @@ int run_builtin(string_vector *args) {
 
 /** Builtin implementations */
 
-int shell_exit(uint32_t argc, char **argv) {
+static int shell_exit(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("exit: too many arguments\n");
 		return CODE_USAGE_ERROR;
@@ -93,7 +101,7 @@ int shell_exit(uint32_t argc, char **argv) {
 	exit(EXIT_SUCCESS);
 }
 
-int shell_cd(uint32_t argc, char **argv) {
+static int shell_cd(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("cd: too many arguments\n");
 		return CODE_USAGE_ERROR;
@@ -126,7 +134,7 @@ int shell_cd(uint32_t argc, char **argv) {
 	return CODE_OK;
 }
 
-int shell_set(uint32_t argc, char **argv) {
+static int shell_set(uint32_t argc, char **argv) {
 	if (argc > 1) {
 		// TODO: implement
 		print_error("set: this function is not implemented");
@@ -137,7 +145,7 @@ int shell_set(uint32_t argc, char **argv) {
 	return CODE_OK;
 }
 
-int shell_export(uint32_t argc, char **argv) {
+static int shell_export(uint32_t argc, char **argv) {
 	if (argc == 1) {
 		vars_print_all(1);
 		return CODE_OK;
@@ -147,7 +155,7 @@ int shell_export(uint32_t argc, char **argv) {
 	return CODE_OK;
 }
 
-int shell_exec(uint32_t argc, char **argv) {
+static int shell_exec(uint32_t argc, char **argv) {
 	if (argc == 1) {
 		return CODE_OK;
 	}
@@ -174,7 +182,7 @@ int shell_exec(uint32_t argc, char **argv) {
  * @param[in] name - Search query.
  * @return Builtin entry; NULL on error.
  */
-const builtin *find_builtin(const char *name) {
+static const builtin *find_builtin(const char *name) {
 	for (size_t i = 0; i < registry_length; i++) {
 		if (strcmp(registry[i].name, name) == 0) {
 			return registry + i;

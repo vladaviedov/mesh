@@ -1,3 +1,11 @@
+/**
+ * @file core/vars.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Environment variables.
+ */
 #include "vars.h"
 
 #include <stdio.h>
@@ -21,8 +29,8 @@ static sh_var_vector *env_vars = NULL;
 // Export counter
 static uint32_t export_count = 0;
 
-char *sh_var_to_string(const sh_var *var);
-sh_var *find_sh_var(const char *key, uint32_t *index);
+static char *sh_var_to_string(const sh_var *var);
+static sh_var *find_sh_var(const char *key, uint32_t *index);
 
 void vars_import(const char **env) {
 	// Reset env vars if populated
@@ -158,7 +166,7 @@ void vars_print_all(int export_flag) {
  * @return String representation; NULL on error.
  * @note Allocated return value.
  */
-char *sh_var_to_string(const sh_var *var) {
+static char *sh_var_to_string(const sh_var *var) {
 	size_t str_len = strlen(var->key) + strlen(var->value) + 1;
 	char *str = ntmalloc(str_len, sizeof(char));
 	
@@ -176,7 +184,7 @@ char *sh_var_to_string(const sh_var *var) {
  * @param[out] index - If not NULL and item was found, places index here.
  * @return Shell variable structure; NULL on error.
  */
-sh_var *find_sh_var(const char *key, uint32_t *index) {
+static sh_var *find_sh_var(const char *key, uint32_t *index) {
 	for (uint32_t i = 0; i < env_vars->count; i++) {
 		sh_var *entry = vec_at_mut(env_vars, i);
 		if (strcmp(entry->key, key) == 0) {

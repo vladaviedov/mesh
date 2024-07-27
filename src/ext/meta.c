@@ -1,3 +1,11 @@
+/**
+ * @file ext/meta.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Mesh meta-commands.
+ */
 #include "meta.h"
 
 #include <stdio.h>
@@ -21,16 +29,16 @@ typedef struct {
 } meta;
 
 // Shown meta commands
-int meta_ctx(uint32_t argc, char **argv, unused char **command);
-int meta_abs(uint32_t argc, char **argv, unused char **command);
-int meta_asroot(uint32_t argc, char **argv, char **command);
+static int meta_ctx(uint32_t argc, char **argv, unused char **command);
+static int meta_abs(uint32_t argc, char **argv, unused char **command);
+static int meta_asroot(uint32_t argc, char **argv, char **command);
 // "Hidden" meta commands
-int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
-int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
-int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
-int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
-int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
-int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command);
+static int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
@@ -46,8 +54,8 @@ static const meta registry[] = {
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
 // Helper functions
-const meta *find_meta(const char *name);
-const char *get_root_program(void);
+static const meta *find_meta(const char *name);
+static const char *get_root_program(void);
 
 int run_meta(string_vector *args, char **command) {
 	// Check for standard meta
@@ -84,7 +92,7 @@ int run_meta(string_vector *args, char **command) {
 
 /** Meta commands */
 
-int meta_ctx(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	// No arguments defaults to show current context
 	if (argc == 1) {
 		return meta_ctx_show(1, NULL, NULL);
@@ -101,7 +109,7 @@ int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	return sub->func(argc - 1, argv + 1, command);
 }
 
-int meta_abs(uint32_t argc, char **argv, unused char **command) {
+static int meta_abs(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -132,7 +140,7 @@ int meta_abs(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_asroot(uint32_t argc, char **argv, char **command) {
+static int meta_asroot(uint32_t argc, char **argv, char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -173,7 +181,7 @@ int meta_asroot(uint32_t argc, char **argv, char **command) {
 
 /** Hidden meta commands */
 
-int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -202,7 +210,7 @@ int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_ctx_set(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx_set(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -222,7 +230,7 @@ int meta_ctx_set(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
+static int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 	if (argc > 1) {
 		print_error("too many arguments\n");
 		return -1;
@@ -250,7 +258,7 @@ int meta_ctx_ls(uint32_t argc, unused char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_ctx_make(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx_make(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -270,7 +278,7 @@ int meta_ctx_make(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_ctx_new(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx_new(uint32_t argc, char **argv, unused char **command) {
 	if (meta_ctx_make(argc, argv, command) < 0) {
 		return -1;
 	}
@@ -281,7 +289,7 @@ int meta_ctx_new(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
-int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
+static int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
@@ -309,7 +317,7 @@ int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
  * @param[in] name - Search query.
  * @return Builtin entry; NULL on error.
  */
-const meta *find_meta(const char *name) {
+static const meta *find_meta(const char *name) {
 	for (size_t i = 0; i < registry_length; i++) {
 		if (strcmp(registry[i].name, name) == 0) {
 			return registry + i;
@@ -325,7 +333,7 @@ static const char *root_prog;
  *
  * @return Name of program; NULL on error.
  */
-const char *get_root_program(void) {
+static const char *get_root_program(void) {
 	if (root_prog != NULL) {
 		return root_prog;
 	}

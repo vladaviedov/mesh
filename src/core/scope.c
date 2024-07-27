@@ -1,3 +1,11 @@
+/**
+ * @file core/scope.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Variable scope frames.
+ */
 #include "scope.h"
 
 #include <stdio.h>
@@ -35,9 +43,9 @@ static scope_stack *scopes = NULL;
 // Current scope
 static scope frame;
 
-void init_frame(void);
-scoped_var *find_named_var(const char *key, uint32_t *index);
-scoped_var *find_pos_var(uint32_t key, uint32_t *index);
+static void init_frame(void);
+static scoped_var *find_named_var(const char *key, uint32_t *index);
+static scoped_var *find_pos_var(uint32_t key, uint32_t *index);
 
 void scope_init(void) {
 	scopes = stack_new(sizeof(scope));
@@ -180,7 +188,7 @@ int scope_delete_frame(void) {
 /**
  * @brief Initialize a new scope frame.
  */
-void init_frame(void) {
+static void init_frame(void) {
 	frame.vars = vec_init(sizeof(scoped_var));
 	frame.pos_count = 0;
 
@@ -194,7 +202,7 @@ void init_frame(void) {
  * @param[out] index - If not NULL and item was found, places index here.
  * @return Scoped nonpositional variable; NULL on error.
  */
-scoped_var *find_named_var(const char *key, uint32_t *index) {
+static scoped_var *find_named_var(const char *key, uint32_t *index) {
 	for (uint32_t i = 0; i < frame.vars.count; i++) {
 		scoped_var *entry = vec_at_mut(&frame.vars, i);
 		if (entry->is_pos) {
@@ -219,7 +227,7 @@ scoped_var *find_named_var(const char *key, uint32_t *index) {
  * @param[in] index - If not NULL and item was found, places index here.
  * @return Scoped positional variable; NULL on error.
  */
-scoped_var *find_pos_var(uint32_t key, uint32_t *index) {
+static scoped_var *find_pos_var(uint32_t key, uint32_t *index) {
 	for (uint32_t i = 0; i < frame.vars.count; i++) {
 		scoped_var *entry = vec_at_mut(&frame.vars, i);
 		if (!entry->is_pos) {

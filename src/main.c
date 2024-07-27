@@ -1,3 +1,10 @@
+/**
+ * @file main.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,10 +30,10 @@
 
 #define PID_STR_MAX_LEN 32
 
-void set_vars(void);
 void run_from_stream(FILE *stream);
-void run_script(const char *filename);
-int process_cmd(char *buffer);
+static void set_vars(void);
+static void run_script(const char *filename);
+static int process_cmd(char *buffer);
 
 int main(int argc, char **argv) {
 	set_vars();
@@ -80,33 +87,9 @@ int main(int argc, char **argv) {
 }
 
 /**
- * @brief Load environment and set shell variables.
- */
-void set_vars(void) {
-	// Load environment
-	extern const char **environ;
-	vars_import(environ);
-
-	// Prompts
-	if (vars_get("PS1") == NULL) {
-		char *ps1 = (getuid() == 0) ? PS1_ROOT : PS1_USER;
-		vars_set("PS1", ps1);
-	}
-
-	// PID
-	pid_t pid = getpid();
-	char pid_str[PID_STR_MAX_LEN];
-	snprintf(pid_str, PID_STR_MAX_LEN, "%d", pid);
-	vars_set("$", pid_str);
-	
-	// PWD
-	char *pwd = getcwd(NULL, 0);
-	vars_set("PWD", pwd);
-	free(pwd);
-}
-
-/**
  * @brief Run shell commands read from a specified stream.
+ *
+ * @param[in] stream - File stream.
  */
 void run_from_stream(FILE *stream) {
 	int last_result = 0;
@@ -140,12 +123,39 @@ void run_from_stream(FILE *stream) {
 	vars_set("?", var_result);
 }
 
+
+/**
+ * @brief Load environment and set shell variables.
+ */
+static void set_vars(void) {
+	// Load environment
+	extern const char **environ;
+	vars_import(environ);
+
+	// Prompts
+	if (vars_get("PS1") == NULL) {
+		char *ps1 = (getuid() == 0) ? PS1_ROOT : PS1_USER;
+		vars_set("PS1", ps1);
+	}
+
+	// PID
+	pid_t pid = getpid();
+	char pid_str[PID_STR_MAX_LEN];
+	snprintf(pid_str, PID_STR_MAX_LEN, "%d", pid);
+	vars_set("$", pid_str);
+	
+	// PWD
+	char *pwd = getcwd(NULL, 0);
+	vars_set("PWD", pwd);
+	free(pwd);
+}
+
 /**
  * @brief Run shell script file.
  *
  * @param[in] filename - Script filename.
  */
-void run_script(const char *filename) {
+static void run_script(const char *filename) {
 	FILE *script = fopen(filename, "r");
 	if (!script) {
 		print_error("failed to open file: %s\n", strerror(errno));	
@@ -164,7 +174,7 @@ void run_script(const char *filename) {
  * @param[in] buffer - Raw command.
  * @return Status code.
  */
-int process_cmd(char *buffer) {
+static int process_cmd(char *buffer) {
 	ast_node *root = parse_from_string(buffer);
 	int result = eval_ast(root);
 	ast_recurse_free(root);

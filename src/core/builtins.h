@@ -1,3 +1,11 @@
+/**
+ * @file core/builtins.h
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Shell built-ins.
+ */
 #pragma once
 
 #include <stdint.h>

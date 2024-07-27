@@ -1,3 +1,11 @@
+/**
+ * @file grammar/mesh.l
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2024
+ * @license GPLv3.0
+ * @brief Token lexing rules.
+ */
 %{
 	#include "ast.h"
 	#include "y.tab.h"

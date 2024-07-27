@@ -1,3 +1,11 @@
+/**
+ * @file ext/meta.h
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Mesh meta-commands.
+ */
 #pragma once
 
 #include <c-utils/vector.h>

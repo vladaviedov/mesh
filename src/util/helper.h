@@ -1,3 +1,11 @@
+/**
+ * @file util/helper.h
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Utility helper functions.
+ */
 #pragma once
 
 #include <stddef.h>

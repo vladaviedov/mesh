@@ -1,3 +1,11 @@
+/**
+ * @file core/exec.c
+ * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
+ * @version 0.3.0
+ * @date 2023-2024
+ * @license GPLv3.0
+ * @brief Execute external programs with fork.
+ */
 #include "exec.h"
 
 #include <stdio.h>
@@ -12,8 +20,8 @@
 #include "../util/helper.h"
 #include "vars.h"
 
-// Forward declare from main.c
-void run_from_stream(const FILE *stream);
+// from main.c
+extern void run_from_stream(const FILE *stream);
 
 int exec_normal(char **argv) {
 	pid_t pid = fork();
