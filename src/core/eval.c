@@ -84,20 +84,22 @@ static int eval_seq(ast_node *seq, int carry_async) {
 		.assigns = vec_init(sizeof(assign)),
 	};
 
+	int result;
+
 	// Left side - required
 	if (seq->left->kind == AST_KIND_SEQ) {
 		// TODO: implement async eval
-		eval_seq(seq->left, seq->value.seq == AST_SEQ_ASYNC);
+		result = eval_seq(seq->left, seq->value.seq == AST_SEQ_ASYNC);
 	} else {
-		eval_child(seq->left, &flags);
+		result = eval_child(seq->left, &flags);
 	}
 
 	// Right side - optional
 	if (seq->right != NULL) {
-		eval_child(seq->right, &flags);
+		result = eval_child(seq->right, &flags);
 	}
 
-	return 0;
+	return result;
 }
 
 static int eval_cond(ast_node *cond, run_flags *flags) {

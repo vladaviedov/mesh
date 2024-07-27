@@ -7,9 +7,12 @@
 
 #include "../util/helper.h"
 #include "../ext/meta.h"
-#include "parser.h"
+#include "../ext/context.h"
+#include "../grammar/parse.h"
+#include "../grammar/ast.h"
 #include "builtins.h"
 #include "exec.h"
+#include "eval.h"
 
 int run_dispatch(string_vector *args, run_flags *flags) {
 	// Meta commands
@@ -25,27 +28,14 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 			return 0;
 		}
 
-		char *subbed_str = parser_sub(meta_out);
+		ast_node *parsed = parse_from_string(meta_out);
+		meta_result = eval_ast(parsed);
+		ast_recurse_free(parsed);
 
-		char *end = subbed_str;
-		int result;
-		do {
-			string_vector *parsed_str = parser_split(end, &end);
-			result = run_dispatch(parsed_str, flags);
-			vec_delete(parsed_str);
-			free_with_elements(parsed_str);
-		} while (end != NULL);
-
-		free(subbed_str);
-		free(meta_out);
-		return result;
+		context_add(strdup(meta_out), NULL);
+		return meta_result;
 	}
 
-	// Shell assignments
-	if (is_pure_assign(args)) {
-		return pure_assign(args->count, args->data, 0);
-	}
-	
 	// Builtins
 	int code = run_builtin(args);
 	if (code >= 0) {

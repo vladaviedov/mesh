@@ -10,7 +10,6 @@
 #include "grammar/ast.h"
 #include "util/helper.h"
 #include "core/vars.h"
-#include "core/parser.h"
 #include "core/run.h"
 #include "core/scope.h"
 #include "core/eval.h"
@@ -169,26 +168,12 @@ void run_script(const char *filename) {
  */
 int process_cmd(char *buffer) {
 	ast_node *root = parse_from_string(buffer);
-	return eval_ast(root);
+	int result = eval_ast(root);
+	ast_recurse_free(root);
 
-	/* char *subbed_str = parser_sub(buffer); */
-	/* if (subbed_str == NULL) { */
-	/* 	return 0; */
-	/* } */
+	if (buffer[0] != ':') {
+		context_add(strdup(buffer), NULL);
+	}
 
-	/* // Add to context */
-	/* if (subbed_str[0] != ':') { */
-	/* 	context_add(strdup(buffer), shell_ctx); */
-	/* } */
-
-	/* char *end = subbed_str; */
-	/* int result; */
-	/* do { */
-	/* 	string_vector *parsed_str = parser_split(end, &end); */
-	/* 	result = run_dispatch(parsed_str); */
-	/* 	free_with_elements(parsed_str); */
-	/* } while (end != NULL); */
-
-	/* free(subbed_str); */
-	/* return result; */
+	return result;
 }
