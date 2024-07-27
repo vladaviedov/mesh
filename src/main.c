@@ -14,6 +14,7 @@
 #include <unistd.h>
 
 #include <c-utils/vector.h>
+#include <c-utils/nanorl.h>
 
 #include "grammar/ast.h"
 #include "util/helper.h"
@@ -80,7 +81,6 @@ int main(int argc, char **argv) {
 	signal(SIGQUIT, SIG_IGN);
 
 	while (1) {
-		printf("%s", vars_get("PS1"));
 		run_from_stream(stdin);
 	}
 
@@ -94,34 +94,35 @@ int main(int argc, char **argv) {
  */
 void run_from_stream(FILE *stream) {
 	int last_result = 0;
-	char buffer[1024];
-	uint32_t index = 0;
 
-	memset(buffer, 0, 1024);
-	index = 0;
+	nrl_error err;
+	char *input = nanorl(vars_get("PS1"), &err);
+	switch (err) {
+	case NRL_ERR_BAD_FD:
+		print_error("cannot read commands from this source\n");
+		exit(1);
+	case NRL_ERR_SYS:
+		if (errno != EINTR) {
+			// Clear line on EOF in interactive mode
+			if (stream == stdin) {
+				putchar('\n');
+			}
 
-	int ch;
-	while ((ch = fgetc(stream)) != '\n' && ch != EOF) {
-		buffer[index] = ch;
-		index++;
-	}
-
-	if (ch == EOF && errno != EINTR) {
-		// Clear line on EOF in interactive mode
-		if (stream == stdin) {
-			putchar('\n');
+			exit(0);
 		}
-
-		exit(last_result);
+		break;
+	case NRL_ERR_EMPTY:
+		break;
+	case NRL_ERR_OK:
+		last_result = process_cmd(input);
+		break;
 	}
-
-	// Execute
-	last_result = process_cmd(buffer);
 
 	// Return code variable
 	char var_result[16];
 	snprintf(var_result, 16, "%d", last_result);
 	vars_set("?", var_result);
+	free(input);
 }
 
 
