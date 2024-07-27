@@ -101,16 +101,12 @@ const char *context_get_row_abs(uint32_t index) {
 		return NULL;
 	}
 
-	return *(char *const *)vec_at(&current_ctx->commands, index);
+	char *const *item = vec_at(&current_ctx->commands, index);
+	return (item != NULL) ? *item : NULL;
 }
 
 const char *context_get_row_rel(uint32_t index) {
-	if (current_ctx == NULL) {
-		print_error("context is not set\n");
-		return NULL;
-	}
-
-	return *(char *const *)vec_at(&current_ctx->commands, current_ctx->commands.count - index - 1);
+	return context_get_row_abs(current_ctx->commands.count - index - 1);
 }
 
 int context_add(const char *command, context *ctx) {
