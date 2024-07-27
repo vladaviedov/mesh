@@ -3,9 +3,10 @@ BUILD=$(PWD)/build
 MAN_DIR=$(BUILD)/share/man/man1
 
 CC=gcc
-CFLAGS=-I$(BUILD)/include -std=gnu99
+CFLAGS=-I$(BUILD)/include -std=c99
 CFLAGS_RELEASE=-O2
 CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
+CFLAGS_GEN=-D_POSIX_C_SOURCE=200809L
 LDFLAGS=-L$(BUILD)/lib -lutils
 
 FLEX=flex
@@ -71,11 +72,11 @@ $(BUILD):
 $(YACC_OBJ): $(YACC_INPUT) $(BUILD) $(BUILD)/obj/grammar
 	cp -v src/grammar/ast.h $(BUILD)/gen
 	cd $(BUILD)/gen && $(YACC) $(YACC_FLAGS) $<
-	$(CC) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/y.tab.c
+	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/y.tab.c
 
 $(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD) $(BUILD)/obj/grammar
 	cd $(BUILD)/gen && $(FLEX) $<
-	$(CC) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
+	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
 
 $(LIBUTILS): lib/c-utils
 	$(MAKE) -C $< $(TASK) \

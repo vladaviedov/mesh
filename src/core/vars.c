@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Environment variables.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "vars.h"
 
 #include <stdio.h>

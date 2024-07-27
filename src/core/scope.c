@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Variable scope frames.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "scope.h"
 
 #include <stdio.h>

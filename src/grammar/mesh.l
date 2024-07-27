@@ -5,6 +5,7 @@
  * @date 2024
  * @license GPLv3.0
  * @brief Token lexing rules.
+ * @note Compile with D_POSIX_C_SOURCE=200809L
  */
 %{
 	#include "ast.h"

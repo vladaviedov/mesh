@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Execute external programs with fork.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "exec.h"
 
 #include <stdio.h>

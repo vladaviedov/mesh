@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief AST evaluation and argv parsing.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "eval.h"
 
 #include <stdlib.h>

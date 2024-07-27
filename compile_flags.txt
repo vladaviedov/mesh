@@ -2,4 +2,4 @@
 -Wextra
 -g
 -Ibuild/include
--std=gnu99
+-std=c99

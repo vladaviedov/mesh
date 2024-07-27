@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Shell built-ins.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "builtins.h"
 
 #include <stdio.h>

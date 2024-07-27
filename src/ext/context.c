@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Mesh context manipulation.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "context.h"
 
 #include <stdlib.h>

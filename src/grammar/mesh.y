@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Shell grammar definition.
  * @note Based on POSIX.1-2017: Shell Command Language, Section 2.10
+ * @note Compile with D_POSIX_C_SOURCE=200809L
  */
 %{
 	#include <stdio.h>

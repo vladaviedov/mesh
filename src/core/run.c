@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Figure out how to run a command.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "run.h"
 
 #include <stdlib.h>

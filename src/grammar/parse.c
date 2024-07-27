@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief YACC parser interface.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "parse.h"
 
 #include <stdlib.h>

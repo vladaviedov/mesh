@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Abstract syntax tree definition and builder.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "ast.h"
 
 #include <stdlib.h>

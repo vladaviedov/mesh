@@ -6,6 +6,7 @@
  * @license GPLv3.0
  * @brief Word expansions.
  */
+#define _POSIX_C_SOURCE 200809L
 #include "expand.h"
 
 #include <ctype.h>
