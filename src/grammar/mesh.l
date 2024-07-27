@@ -1,14 +1,11 @@
 %{
 	#include "ast.h"
 	#include "y.tab.h"
-
-	// Missing special characters
-	// This does not handle escaped quotes
 %}
 
 digit [0-9]
 alpha [a-zA-z]
-symbol [-\.\+\$\/]
+symbol [-\.\+\$\/?:]
 separator [ \t]
 escaped \\.
 
