@@ -37,6 +37,9 @@ static int eval_run(ast_node *run, run_flags *flags);
 
 static string_vector *to_argv(ast_node *target);
 static void add_word_to_argv(ast_node *word, string_vector *argv);
+static void to_flags(ast_node *apply, run_flags *flags);
+static void add_redir_to_flags(ast_node *rdr, run_flags *flags);
+static void add_assign_to_flags(ast_node *node, run_flags *flags);
 
 int eval_ast(ast_node *root) {
 	if (root->kind == AST_KIND_SEQ) {
@@ -131,7 +134,7 @@ static int eval_cond(ast_node *cond, run_flags *flags) {
  */
 static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	int pipe_fds[2];
-	if (pipe_nonblock(pipe_fds) < 0) {
+	if (pipe(pipe_fds) < 0) {
 		return -1;
 	}
 
@@ -143,6 +146,7 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	};
 	vec_push(&left_flags.redirs, &output);
 	eval_child(pipeline->left, &left_flags);
+	close(pipe_fds[1]);
 
 	// Redirect read end to right command's input
 	run_flags right_flags = copy_flags(flags);
@@ -151,7 +155,10 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 		.fd_to = pipe_fds[0],
 	};
 	vec_push(&right_flags.redirs, &input);
-	return eval_child(pipeline->right, &right_flags);
+
+	int result = eval_child(pipeline->right, &right_flags);
+	close(pipe_fds[0]);
+	return result;
 }
 
 /**
@@ -165,8 +172,8 @@ static int eval_run(ast_node *run, run_flags *flags) {
 	ast_run_value type = run->value.run;
 
 	if (type == AST_RUN_APPLY) {
-		print_warning("apply not implemented\n");
-		return 0;
+		to_flags(run->left, flags);
+		return eval_run(run->right, flags);
 	}
 	if (type == AST_RUN_SHELL_ENV) {
 		print_warning("shell env not implemented\n");
@@ -282,4 +289,62 @@ static void add_word_to_argv(ast_node *word, string_vector *argv) {
 	}
 
 	free(expanded);
+}
+
+/**
+ * @brief Apply redirections and assignments to flags.
+ *
+ * @param[in] apply - Apply root node.
+ * @param[in,out] flags - Flags to populate.
+ */
+static void to_flags(ast_node *apply, run_flags *flags) {
+	stack words = stack_init(sizeof(ast_node));
+
+	// Parser will always build the tree to the left
+	while (apply->kind == AST_KIND_JOIN) {
+		stack_push(&words, apply->right);
+		apply = apply->left;
+	}
+
+	// Left-most node
+	stack_push(&words, apply);
+
+	// Now process to flags
+	ast_node buffer;
+	while (stack_pop(&words, &buffer) != STACK_STATUS_EMPTY) {
+		if (buffer.kind == AST_KIND_RDR) {
+			add_redir_to_flags(&buffer, flags);
+		} else if (buffer.kind == AST_KIND_ASSIGN) {
+			add_assign_to_flags(&buffer, flags);
+		}
+	}
+
+	stack_deinit(&words);
+}
+
+static void add_redir_to_flags(ast_node *rdr, run_flags *flags) {
+	int fd_from = rdr->left->value.fdnum;
+	char *str_to = rdr->right->value.str;
+
+	char *end;
+	int fd_to = strtoul(str_to, &end, 10);
+	if (end == str_to) {
+		print_warning("redirect to file not implemented yet\n");
+		return;
+	}
+
+	// TODO: finish implementing
+}
+
+static void add_assign_to_flags(ast_node *node, run_flags *flags) {
+	char *assign_str = node->value.str;
+
+	char *key = strtok(assign_str, "=");
+	char *value = strtok(NULL, "=");
+
+	assign new_assign = {
+		.key = key,
+		.value = expand_word(value),
+	};
+	vec_push(&flags->assigns, &new_assign);
 }
