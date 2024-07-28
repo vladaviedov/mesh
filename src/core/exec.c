@@ -154,8 +154,8 @@ static int do_redirs(const redir_vector *redirs) {
 		case RDR_FILE: {
 			int file_fd = open(op->to.filename, op->flags, 0644);
 			if (file_fd < 0) {
-				print_error(
-					"open failed on %s: %s\n", op->to.filename, strerror(errno));
+				print_error("open failed on %s: %s\n", op->to.filename,
+					strerror(errno));
 				return -1;
 			}
 			if (dup2(file_fd, op->from) < 0) {
