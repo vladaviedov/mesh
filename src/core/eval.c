@@ -9,8 +9,10 @@
 #define _POSIX_C_SOURCE 200809L
 #include "eval.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <c-utils/stack.h>
@@ -141,8 +143,10 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	// Redirect left commmand's output to the write end
 	run_flags left_flags = copy_flags(flags);
 	redir output = {
-		.fd_from = STDOUT_FILENO,
-		.fd_to = pipe_fds[1],
+		.type = RDR_FD,
+		.flags = 0,
+		.from = STDOUT_FILENO,
+		.to.fd = pipe_fds[1],
 	};
 	vec_push(&left_flags.redirs, &output);
 	eval_child(pipeline->left, &left_flags);
@@ -151,8 +155,10 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	// Redirect read end to right command's input
 	run_flags right_flags = copy_flags(flags);
 	redir input = {
-		.fd_from = STDIN_FILENO,
-		.fd_to = pipe_fds[0],
+		.type = RDR_FD,
+		.flags = 0,
+		.from = STDIN_FILENO,
+		.to.fd = pipe_fds[0],
 	};
 	vec_push(&right_flags.redirs, &input);
 
@@ -326,14 +332,87 @@ static void add_redir_to_flags(ast_node *rdr, run_flags *flags) {
 	int fd_from = rdr->left->value.fdnum;
 	char *str_to = rdr->right->value.str;
 
-	char *end;
-	int fd_to = strtoul(str_to, &end, 10);
-	if (end == str_to) {
-		print_warning("redirect to file not implemented yet\n");
-		return;
+	int fd_to;
+	if (rdr->value.rdr == AST_RDR_O_DUP || rdr->value.rdr == AST_RDR_I_DUP) {
+		if (str_to[0] == '-') {
+			fd_to = -1;
+		} else {
+			char *end;
+			fd_to = strtoul(str_to, &end, 10);
+			if (end == str_to) {
+				print_warning("invalid duplication target; skipping\n");
+				return;
+			}
+		}
 	}
 
-	// TODO: finish implementing
+	redir new_redir = {
+		.flags = 0,
+		.from = fd_from,
+	};
+
+	switch (rdr->value.rdr) {
+	case AST_RDR_I_DUP:
+		if (fd_to < 0) {
+			new_redir.type = RDR_CLOSE;
+			break;
+		}
+
+		new_redir.type = RDR_FD;
+		new_redir.to.fd = fd_to;
+		if (new_redir.from < 0) {
+			new_redir.from = STDIN_FILENO;
+		}
+		break;
+	case AST_RDR_O_DUP:
+		if (fd_to < 0) {
+			new_redir.type = RDR_CLOSE;
+			break;
+		}
+
+		new_redir.type = RDR_FD;
+		new_redir.to.fd = fd_to;
+		if (new_redir.from < 0) {
+			new_redir.from = STDOUT_FILENO;
+		}
+		break;
+	case AST_RDR_I_NORMAL:
+		new_redir.type = RDR_FILE;
+		new_redir.to.filename = str_to;
+		new_redir.flags = O_RDONLY;
+		if (new_redir.from < 0) {
+			new_redir.from = STDIN_FILENO;
+		}
+		break;
+	case AST_RDR_I_IO:
+		new_redir.type = RDR_FILE;
+		new_redir.to.filename = str_to;
+		new_redir.flags = O_RDWR | O_CREAT;
+		if (new_redir.from < 0) {
+			new_redir.from = STDIN_FILENO;
+		}
+		break;
+	case AST_RDR_O_CLOBBER:
+		// TODO: implement properly
+	case AST_RDR_O_NORMAL:
+		new_redir.type = RDR_FILE;
+		new_redir.to.filename = str_to;
+		new_redir.flags = O_CREAT | O_WRONLY | O_TRUNC;
+		if (new_redir.from < 0) {
+			new_redir.from = STDOUT_FILENO;
+		}
+		break;
+	case AST_RDR_O_APPEND:
+		new_redir.type = RDR_FILE;
+		new_redir.to.filename = str_to;
+		new_redir.flags = O_CREAT | O_WRONLY | O_APPEND;
+		if (new_redir.from < 0) {
+			new_redir.from = STDOUT_FILENO;
+		}
+		break;
+	}
+
+	vec_push(&flags->redirs, &new_redir);
 }
 
 static void add_assign_to_flags(ast_node *node, run_flags *flags) {

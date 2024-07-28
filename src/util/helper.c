@@ -6,7 +6,6 @@
  * @license GPLv3.0
  * @brief Utility helper functions.
  */
-#include <fcntl.h>
 #define _POSIX_C_SOURCE 200809L
 #include "helper.h"
 
@@ -56,13 +55,4 @@ void free_with_elements(vector *vec) {
 
 	free(data);
 	vec_delete(vec);
-}
-
-int pipe_nonblock(int fds[2]) {
-	if (pipe(fds) < 0) {
-		return -1;
-	}
-
-	int flags = fcntl(fds[0], F_GETFL, 0);
-	return fcntl(fds[0], F_SETFL, flags | O_NONBLOCK);
 }

@@ -54,10 +54,3 @@ void print_warning(const char *format, ...);
  * @param[in] vec - Vector object.
  */
 void free_with_elements(vector *vec);
-
-/**
- * @brief Create a non-blocking pipe.
- *
- * @return 0 on success, -1 on failure.
- */
-int pipe_nonblock(int fds[2]);

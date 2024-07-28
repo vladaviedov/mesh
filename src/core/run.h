@@ -12,9 +12,23 @@
 
 #include "../util/helper.h"
 
+typedef enum {
+	RDR_FD,
+	RDR_FILE,
+	RDR_CLOSE,
+} redir_type;
+
+typedef union {
+	int fd;
+	char *filename;
+} redir_src;
+
 typedef struct {
-	int fd_from;
-	int fd_to;
+	redir_type type;
+	int flags;
+
+	int from;
+	redir_src to;
 } redir;
 
 typedef vector redir_vector;

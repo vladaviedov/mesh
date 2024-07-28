@@ -159,7 +159,7 @@ static char *parse_variable(const char *start, const char **end) {
  */
 static char *subshell_eval(const char *command) {
 	int pipe_fds[2];
-	if (pipe_nonblock(pipe_fds) < 0) {
+	if (pipe(pipe_fds) < 0) {
 		return NULL;
 	}
 

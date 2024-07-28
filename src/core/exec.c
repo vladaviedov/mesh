@@ -9,6 +9,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "exec.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -19,8 +20,8 @@
 #include <unistd.h>
 
 #include "../util/helper.h"
-#include "vars.h"
 #include "run.h"
+#include "vars.h"
 
 // from main.c
 extern void run_from_stream(const FILE *stream);
@@ -143,8 +144,29 @@ int exec_subshell(const char *cmd, int fd_pipe_out) {
 static int do_redirs(const redir_vector *redirs) {
 	for (uint32_t i = 0; i < redirs->count; i++) {
 		const redir *op = vec_at(redirs, i);
-		if (dup2(op->fd_to, op->fd_from) < 0) {
-			return -1;
+		switch (op->type) {
+		case RDR_FD:
+			if (dup2(op->to.fd, op->from) < 0) {
+				print_error("dup failed\n");
+				return -1;
+			}
+			break;
+		case RDR_FILE: {
+			int file_fd = open(op->to.filename, op->flags, 0644);
+			if (file_fd < 0) {
+				print_error(
+					"open failed on %s: %s\n", op->to.filename, strerror(errno));
+				return -1;
+			}
+			if (dup2(file_fd, op->from) < 0) {
+				print_error("dup failed\n");
+				return -1;
+			}
+			break;
+		}
+		case RDR_CLOSE:
+			close(op->from);
+			break;
 		}
 	}
 
