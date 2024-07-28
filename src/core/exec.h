@@ -8,13 +8,16 @@
  */
 #pragma once
 
+#include "run.h"
+
 /**
  * @brief Exec wrapper for normal processes.
  *
  * @param[in] argv - Child arguments.
+ * @param[in] flags - Special run flags.
  * @return Return code.
  */
-int exec_normal(char **argv);
+int exec_normal(char **argv, const run_flags *flags);
 
 /**
  * @brief Exec wrapper with silenced output.

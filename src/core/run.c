@@ -59,7 +59,7 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 	argv[args->count] = NULL;
 
 	// Exec program
-	return exec_normal(argv);
+	return exec_normal(argv, flags);
 }
 
 run_flags copy_flags(const run_flags *flags) {

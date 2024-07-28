@@ -147,8 +147,8 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	// Redirect read end to right command's input
 	run_flags right_flags = copy_flags(flags);
 	redir input = {
-		.fd_from = pipe_fds[0],
-		.fd_to = STDIN_FILENO,
+		.fd_from = STDIN_FILENO,
+		.fd_to = pipe_fds[0],
 	};
 	vec_push(&right_flags.redirs, &input);
 	return eval_child(pipeline->right, &right_flags);

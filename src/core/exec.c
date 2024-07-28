@@ -20,11 +20,15 @@
 
 #include "../util/helper.h"
 #include "vars.h"
+#include "run.h"
 
 // from main.c
 extern void run_from_stream(const FILE *stream);
 
-int exec_normal(char **argv) {
+static int do_redirs(const redir_vector *redirs);
+static void do_assigns(const assign_vector *assigns);
+
+int exec_normal(char **argv, const run_flags *flags) {
 	pid_t pid = fork();
 
 	if (pid < 0) {
@@ -32,7 +36,14 @@ int exec_normal(char **argv) {
 		print_error("failed to create new process\n");
 		return -1;
 	} else if (pid == 0) {
-		// Child - load environment and exec
+		// Child - prepare and exec
+		if (do_redirs(&flags->redirs) < 0) {
+			print_error("failed to perform redirections\n");
+			exit(1);
+		}
+		do_assigns(&flags->assigns);
+
+		// Load environment
 		extern char **environ;
 		environ = vars_export();
 
@@ -119,5 +130,37 @@ int exec_subshell(const char *cmd, int fd_pipe_out) {
 		int result;
 		wait(&result);
 		return WEXITSTATUS(result);
+	}
+}
+
+/**
+ * @brief Perform all redirections.
+ *
+ * @param[in] redirs - Redirections.
+ * @return 0 on success, -1 on error.
+ * @note Should be run in the child thread.
+ */
+static int do_redirs(const redir_vector *redirs) {
+	for (uint32_t i = 0; i < redirs->count; i++) {
+		const redir *op = vec_at(redirs, i);
+		if (dup2(op->fd_to, op->fd_from) < 0) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * @brief Perform all assignments.
+ *
+ * @param[in] assigns - Assignments.
+ * @note Should be run in the child thread.
+ */
+static void do_assigns(const assign_vector *assigns) {
+	for (uint32_t i = 0; i < assigns->count; i++) {
+		const assign *op = vec_at(assigns, i);
+		vars_set(op->key, op->value);
+		vars_set_export(op->key);
 	}
 }
