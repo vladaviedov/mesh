@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "
