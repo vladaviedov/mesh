@@ -135,7 +135,7 @@ redirect_list: redirect_list redirect { $$ = ast_make_join($1, $2); }
 			 ;
 
 redirect: FDNUM redirect_op WORD { $$ = ast_make_rdr($2, $1, $3); }
-		| redirect_op WORD { $$ = ast_make_rdr($1, ast_make_fdnum(1), $2); }
+		| redirect_op WORD { $$ = ast_make_rdr($1, ast_make_fdnum(-1), $2); }
 		;
 
 redirect_op: RO_NORMAL { $$ = AST_RDR_O_NORMAL; }

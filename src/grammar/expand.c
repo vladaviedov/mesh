@@ -163,9 +163,6 @@ static char *subshell_eval(const char *command) {
 		return NULL;
 	}
 
-	int flags = fcntl(pipe_fds[0], F_GETFL, 0);
-	fcntl(pipe_fds[0], F_SETFL, flags | O_NONBLOCK);
-
 	exec_subshell(command, pipe_fds[1]);
 
 	char_vector output = vec_init(sizeof(char));
