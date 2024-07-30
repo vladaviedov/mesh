@@ -13,12 +13,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <c-utils/nanorl.h>
 #include <c-utils/vector.h>
 
 #include "../core/exec.h"
 #include "../core/vars.h"
 #include "../util/helper.h"
 #include "context.h"
+
+#define SPACE_STR " "
 
 // Meta comamnds
 // Note: typedef in header
@@ -29,6 +32,7 @@ struct meta {
 };
 
 // Shown meta commands
+static int meta_add(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
 static int meta_asroot(uint32_t argc, char **argv, char **command);
 static noreturn int meta_hcf(
@@ -43,6 +47,8 @@ static int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
+	{ .name = ":a", .func = &meta_add, .hidden = 0 },
+	{ .name = ":add", .func = &meta_add, .hidden = 0 },
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
 	{ .name = ":hcf", .func = &meta_hcf, .hidden = 0 },
@@ -57,6 +63,7 @@ static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
 // Helper functions
 static const char *get_root_program(void);
+static char *unsplit(uint32_t count, char **words);
 
 const meta *search_meta(const char *name) {
 	for (size_t i = 0; i < registry_length; i++) {
@@ -78,6 +85,28 @@ int run_meta(const meta *cmd, string_vector *args, char **command) {
 }
 
 /** Meta commands */
+
+static int meta_add(uint32_t argc, char **argv, unused char **command) {
+	if (argc == 1) {
+		nrl_error err;
+		char *input = nanorl("", &err);
+
+		switch (err) {
+		case NRL_ERR_SYS:
+		case NRL_ERR_BAD_FD:
+			print_error("failed to get input\n");
+			return -1;
+		case NRL_ERR_EMPTY:
+			print_warning("no input given\n");
+			return -1;
+		case NRL_ERR_OK:
+			return context_add(input, NULL);
+		}
+	}
+
+	char *combined = unsplit(argc - 1, argv + 1);
+	return context_add(combined, NULL);
+}
 
 static int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	// No arguments defaults to show current context
@@ -300,4 +329,33 @@ static const char *get_root_program(void) {
 	}
 
 	return NULL;
+}
+
+/**
+ * @brief Recombine a split argv back into 1 string.
+ *
+ * @param[in] count - Word count.
+ * @param[in] words - Word vector.
+ * @return Recombined string.
+ * @note Allocated return value.
+ */
+static char *unsplit(uint32_t count, char **words) {
+	// Measure length of the combined string
+	uint32_t new_size = 0;
+	for (uint32_t i = 0; i < count; i++) {
+		new_size += strlen(words[i]) + 1;
+	}
+
+	// Combine into one string
+	char *combined = malloc(sizeof(char) * new_size);
+	combined[0] = '\0';
+
+	// First element
+	strcat(combined, words[0]);
+	for (uint32_t i = 1; i < count; i++) {
+		strcat(combined, SPACE_STR);
+		strcat(combined, words[i]);
+	}
+
+	return combined;
 }
