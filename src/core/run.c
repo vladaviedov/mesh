@@ -70,3 +70,8 @@ run_flags copy_flags(const run_flags *flags) {
 
 	return new_flags;
 }
+
+void del_flags(run_flags *flags) {
+	vec_deinit(&flags->redirs);
+	vec_deinit(&flags->assigns);
+}

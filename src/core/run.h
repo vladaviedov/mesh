@@ -61,3 +61,10 @@ int run_dispatch(string_vector *args, run_flags *flags);
  * @return New flag structure.
  */
 run_flags copy_flags(const run_flags *flags);
+
+/**
+ * @brief Delete flag vectors.
+ *
+ * @param[in] flags - Flags object.
+ */
+void del_flags(run_flags *flags);

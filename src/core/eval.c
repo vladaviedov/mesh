@@ -104,6 +104,7 @@ static int eval_seq(ast_node *seq, int carry_async) {
 		result = eval_child(seq->right, &flags);
 	}
 
+	del_flags(&flags);
 	return result;
 }
 
@@ -151,6 +152,7 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 	vec_push(&left_flags.redirs, &output);
 	eval_child(pipeline->left, &left_flags);
 	close(pipe_fds[1]);
+	del_flags(&left_flags);
 
 	// Redirect read end to right command's input
 	run_flags right_flags = copy_flags(flags);
@@ -164,6 +166,7 @@ static int eval_pipe(ast_node *pipeline, run_flags *flags) {
 
 	int result = eval_child(pipeline->right, &right_flags);
 	close(pipe_fds[0]);
+	del_flags(&right_flags);
 	return result;
 }
 
