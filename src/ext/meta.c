@@ -33,6 +33,7 @@ struct meta {
 
 // Shown meta commands
 static int meta_add(uint32_t argc, char **argv, unused char **command);
+static int meta_replace(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
 static int meta_asroot(uint32_t argc, char **argv, char **command);
 static noreturn int meta_hcf(
@@ -49,6 +50,8 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 static const meta registry[] = {
 	{ .name = ":a", .func = &meta_add, .hidden = 0 },
 	{ .name = ":add", .func = &meta_add, .hidden = 0 },
+	{ .name = ":r", .func = &meta_replace, .hidden = 0 },
+	{ .name = ":replace", .func = &meta_replace, .hidden = 0 },
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
 	{ .name = ":hcf", .func = &meta_hcf, .hidden = 0 },
@@ -106,6 +109,40 @@ static int meta_add(uint32_t argc, char **argv, unused char **command) {
 
 	char *combined = unsplit(argc - 1, argv + 1);
 	return context_add(combined, NULL);
+}
+
+static int meta_replace(uint32_t argc, char **argv, unused char **command) {
+	if (argc == 1) {
+		print_error("not enough arguments\n");
+		return -1;
+	}
+
+	char *end;
+	int32_t item = strtol(argv[1], &end, 10);
+	if (*end != '\0') {
+		print_error("invalid command index\n");
+		return -1;
+	}
+
+	if (argc == 2) {
+		nrl_error err;
+		char *input = nanorl("", &err);
+
+		switch (err) {
+		case NRL_ERR_SYS:
+		case NRL_ERR_BAD_FD:
+			print_error("failed to get input\n");
+			return -1;
+		case NRL_ERR_EMPTY:
+			print_warning("no input given\n");
+			return -1;
+		case NRL_ERR_OK:
+			return context_replace(input, item, NULL);
+		}
+	}
+
+	char *combined = unsplit(argc - 2, argv + 2);
+	return context_replace(combined, item, NULL);
 }
 
 static int meta_ctx(uint32_t argc, char **argv, unused char **command) {

@@ -71,10 +71,20 @@ const char *context_get_row(int32_t index);
  * @brief Add new command to the context.
  *
  * @param[in] command - Command to add.
- * @param[in] context - Context to manipulate; if NULL, uses current context.
+ * @param[in] ctx - Context to manipulate; if NULL, uses current context.
  * @return 0 on success; -1 on error
  */
 int context_add(const char *command, context *ctx);
+
+/**
+ * @brief Replace command in a context.
+ *
+ * @param[in] new_cmd - New command to store.
+ * @param[in] index - Index to replace.
+ * @param[in] ctx - Context to manipulate; if NULL, uses current context.
+ * @return 0 on success; -1 on error.
+ */
+int context_replace(const char *new_cmd, uint32_t index, context *ctx);
 
 /**
  * @brief Create the history context.

@@ -143,6 +143,31 @@ int context_add(const char *command, context *ctx) {
 	return 0;
 }
 
+int context_replace(const char *new_cmd, uint32_t index, context *ctx) {
+	if (ctx == NULL) {
+		if (current_ctx == NULL) {
+			print_error("context is not set\n");
+			return -1;
+		}
+
+		ctx = current_ctx;
+	}
+
+	if (index >= ctx->commands.count) {
+		print_error("index is out of bounds\n");
+		return -1;
+	}
+
+	char **old_cmd = vec_at_mut(&ctx->commands, index);
+	free(*old_cmd);
+
+	// Recast for const-correctness
+	const char **cmd_slot = (const char **)old_cmd;
+	*cmd_slot = new_cmd;
+
+	return 0;
+}
+
 int context_hist_init(void) {
 	return context_new("history", &history);
 }
