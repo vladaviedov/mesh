@@ -22,6 +22,10 @@
 #include "context.h"
 
 #define SPACE_STR " "
+#define IMPORT_CTX_NAME "_import_ctx"
+
+#define DIRECT_START "#:"
+#define DIRECT_NAME "name "
 
 // Meta comamnds
 // Note: typedef in header
@@ -46,6 +50,8 @@ static int meta_ctx_ls(
 static int meta_ctx_make(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_import(uint32_t argc, char **argv, unused char **command);
+static int meta_ctx_export(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":a", .func = &meta_add, .hidden = 0 },
@@ -61,6 +67,8 @@ static const meta registry[] = {
 	{ .name = ":_ctx_make", .func = &meta_ctx_make, .hidden = 1 },
 	{ .name = ":_ctx_new", .func = &meta_ctx_new, .hidden = 1 },
 	{ .name = ":_ctx_del", .func = &meta_ctx_del, .hidden = 1 },
+	{ .name = ":_ctx_import", .func = &meta_ctx_import, .hidden = 1 },
+	{ .name = ":_ctx_export", .func = &meta_ctx_export, .hidden = 1 },
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -297,6 +305,12 @@ static int meta_ctx_make(uint32_t argc, char **argv, unused char **command) {
 		return -1;
 	}
 
+	// Reserved
+	if (argv[1][0] == '_') {
+		print_error("context names may not begin with an underscore\n");
+		return -1;
+	}
+
 	if (context_new(argv[1], NULL) < 0) {
 		print_error("context already exists\n");
 		return -1;
@@ -334,6 +348,121 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
 	}
 
 	printf("context '%s' deleted\n", argv[1]);
+	return 0;
+}
+
+static int meta_ctx_import(uint32_t argc, char **argv, unused char **command) {
+	if (argc == 1) {
+		print_error("not enough arguments\n");
+		return -1;
+	}
+
+	int some_failed = 0;
+	for (uint32_t i = 1; i < argc; i++) {
+		FILE *source = fopen(argv[i], "r");
+
+		char *line = NULL;
+		size_t _ = 0;
+
+		context *ctx;
+		if (context_new(IMPORT_CTX_NAME, &ctx) < 0) {
+			print_error("failed to create a new context\n");
+			return -1;
+		}
+
+		int error = 0;
+		while (!error && getline(&line, &_, source) > 0) {
+			// Remove newline and spaces at the end
+			char *nl = strchr(line, '\n');
+			if (nl != NULL) {
+				*nl = '\0';
+			}
+			while (--nl > line) {
+				char ch = *nl;
+				
+				if (ch == ' ' || ch == '\t') {
+					*nl = '\0';
+				} else {
+					break;
+				}
+			}
+
+			// Trim leading spaces
+			char *trimmed = line;
+			while (*trimmed != '\0') {
+				char ch = *trimmed;
+
+				if (ch == ' ' || ch == '\t') {
+					trimmed++;
+				} else {
+					break;
+				}
+			}
+
+			// Parse directives
+			if (strncmp(trimmed, DIRECT_START, strlen(DIRECT_START)) == 0) {
+				if (strncmp(trimmed + strlen(DIRECT_START), DIRECT_NAME, strlen(DIRECT_NAME)) == 0) {
+					uint32_t name_start = strlen(DIRECT_START) + strlen(DIRECT_NAME);
+					if (strlen(trimmed) < name_start) {
+						print_error("%s: no argument to name", argv[i]);
+						error = 1;
+						goto line_cleanup;
+					}
+
+					// Reserved
+					if (trimmed[name_start] == '_') {
+						print_error("%s: invalid context name\n", argv[i]);
+						error = 1;
+						goto line_cleanup;
+					}
+
+					free(ctx->name);
+					ctx->name = strdup(trimmed + name_start);
+				} else {
+					print_error("%s: invalid directive '%s'\n", argv[i], trimmed + 2);
+					error = 1;
+					goto line_cleanup;
+				}
+			}
+
+			// Ignore comment and empty lines
+			if (strlen(trimmed) == 0 || trimmed[0] == '#') {
+				goto line_cleanup;
+			}
+
+			context_add(strdup(trimmed), ctx);
+
+		line_cleanup:
+			free(line);
+			line = NULL;
+		}
+
+		if (line != NULL) {
+			free(line);
+		}
+
+		fclose(source);
+
+		if (error) {
+			print_error("failed to import from %s\n", argv[i]);
+			context_delete(IMPORT_CTX_NAME);
+			some_failed = 1;
+			break;
+		}
+
+		// If name is not modified, use filename
+		if (ctx->name[0] == '_') {
+			free(ctx->name);
+			ctx->name = strdup(argv[i]);
+		}
+
+		printf("imported '%s' as '%s'\n", argv[i], ctx->name);
+	}
+
+	return some_failed ? -1 : 0;
+}
+
+static int meta_ctx_export(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
