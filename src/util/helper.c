@@ -45,7 +45,7 @@ void print_warning(const char *format, ...) {
 	va_end(args);
 }
 
-void free_with_elements(vector *vec) {
+void free_elements(vector *vec) {
 	uint32_t count = vec->count;
 	void **data = vec_collect(vec);
 	for (uint32_t i = 0; i < count; i++) {
@@ -53,5 +53,4 @@ void free_with_elements(vector *vec) {
 	}
 
 	free(data);
-	vec_delete(vec);
 }

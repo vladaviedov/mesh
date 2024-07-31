@@ -18,7 +18,6 @@
 
 static context_vector *contexts = NULL;
 static context *current_ctx = NULL;
-
 static context *history = NULL;
 
 static int find_context_idx(const char *name, uint32_t *index);
@@ -32,6 +31,8 @@ int context_new(const char *name, context **ctx_out) {
 		return -1;
 	}
 
+	char *current_name = (current_ctx != NULL) ? current_ctx->name : NULL;
+
 	context ctx = {
 		.name = strdup(name),
 		.commands = vec_init(sizeof(char *)),
@@ -40,6 +41,14 @@ int context_new(const char *name, context **ctx_out) {
 	vec_push(contexts, &ctx);
 	if (ctx_out != NULL) {
 		*ctx_out = vec_at_mut(contexts, contexts->count - 1);
+	}
+
+	// Vector might realloc the memory
+	if (current_name != NULL) {
+		current_ctx = find_context(current_name);
+	}
+	if (history != NULL) {
+		history = find_context("history");
 	}
 
 	return 0;
@@ -52,7 +61,9 @@ int context_delete(const char *name) {
 	}
 
 	// Reset current context if deleting it
+	char *current_name = current_ctx->name;
 	if (vec_at(contexts, index) == current_ctx) {
+		current_name = NULL;
 		current_ctx = NULL;
 	}
 
@@ -64,7 +75,14 @@ int context_delete(const char *name) {
 
 	// Delete context
 	free(deleted.name);
-	free_with_elements(&deleted.commands);
+	free_elements(&deleted.commands);
+	vec_deinit(&deleted.commands);
+
+	// Re-find contexts
+	if (current_name != NULL) {
+		current_ctx = find_context(current_name);
+	}
+	history = find_context("history");
 
 	return 0;
 }

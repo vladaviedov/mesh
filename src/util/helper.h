@@ -49,8 +49,8 @@ void print_error(const char *format, ...);
 void print_warning(const char *format, ...);
 
 /**
- * @brief Free vector and its elements.
+ * @brief Free vector's pointer elements.
  *
  * @param[in] vec - Vector object.
  */
-void free_with_elements(vector *vec);
+void free_elements(vector *vec);
