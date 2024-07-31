@@ -123,6 +123,11 @@ static int meta_replace(uint32_t argc, char **argv, unused char **command) {
 		print_error("invalid command index\n");
 		return -1;
 	}
+	
+	// Relative indexing
+	if (!abs_index) {
+		item = context_get(NULL)->commands.count - item - 1;
+	}
 
 	if (argc == 2) {
 		nrl_error err;
