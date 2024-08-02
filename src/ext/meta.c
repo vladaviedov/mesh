@@ -20,6 +20,7 @@
 #include "../core/vars.h"
 #include "../util/helper.h"
 #include "context.h"
+#include "store.h"
 
 #define SPACE_STR " "
 #define IMPORT_CTX_NAME "_import_ctx"
@@ -39,6 +40,7 @@ struct meta {
 static int meta_add(uint32_t argc, char **argv, unused char **command);
 static int meta_replace(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
+static int meta_store(uint32_t argc, char **argv, unused char **command);
 static int meta_asroot(uint32_t argc, char **argv, char **command);
 static noreturn int meta_hcf(
 	unused uint32_t argc, unused char **argv, unused char **command);
@@ -52,6 +54,11 @@ static int meta_ctx_new(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_import(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_export(uint32_t argc, char **argv, unused char **command);
+static int meta_store_load(uint32_t argc, char **argv, unused char **command);
+static int meta_store_save(uint32_t argc, char **argv, unused char **command);
+static int meta_store_ls(uint32_t argc, char **argv, unused char **command);
+static int meta_store_edit(uint32_t argc, char **argv, char **command);
+static int meta_store_reload(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":a", .func = &meta_add, .hidden = 0 },
@@ -59,6 +66,8 @@ static const meta registry[] = {
 	{ .name = ":r", .func = &meta_replace, .hidden = 0 },
 	{ .name = ":replace", .func = &meta_replace, .hidden = 0 },
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
+	{ .name = ":s", .func = &meta_store, .hidden = 0 },
+	{ .name = ":store", .func = &meta_store, .hidden = 0 },
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
 	{ .name = ":hcf", .func = &meta_hcf, .hidden = 0 },
 	{ .name = ":_ctx_show", .func = &meta_ctx_show, .hidden = 1 },
@@ -69,6 +78,11 @@ static const meta registry[] = {
 	{ .name = ":_ctx_del", .func = &meta_ctx_del, .hidden = 1 },
 	{ .name = ":_ctx_import", .func = &meta_ctx_import, .hidden = 1 },
 	{ .name = ":_ctx_export", .func = &meta_ctx_export, .hidden = 1 },
+	{ .name = ":_store_load", .func = &meta_store_load, .hidden = 1 },
+	{ .name = ":_store_save", .func = &meta_store_save, .hidden = 1 },
+	{ .name = ":_store_ls", .func = &meta_store_ls, .hidden = 1 },
+	{ .name = ":_store_edit", .func = &meta_store_edit, .hidden = 1 },
+	{ .name = ":_store_reload", .func = &meta_store_reload, .hidden = 1 },
 };
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
@@ -175,6 +189,23 @@ static int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	return sub->func(argc - 1, argv + 1, command);
 }
 
+static int meta_store(uint32_t argc, char **argv, unused char **command) {
+	// No arguments defaults to show current context
+	if (argc == 1) {
+		return meta_store_ls(1, NULL, NULL);
+	}
+
+	char sub_name[1024];
+	snprintf(sub_name, 1024, ":_store_%s", argv[1]);
+	const meta *sub = search_meta(sub_name);
+	if (sub == NULL) {
+		print_error("store subcommand '%s' does not exist\n", argv[1]);
+		return -1;
+	}
+
+	return sub->func(argc - 1, argv + 1, command);
+}
+
 static int meta_asroot(uint32_t argc, char **argv, char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
@@ -205,7 +236,7 @@ static int meta_asroot(uint32_t argc, char **argv, char **command) {
 		return 1;
 	}
 
-	char buffer[strlen(result) + strlen(root_program) + 1];
+	char buffer[strlen(result) + strlen(root_program) + 2];
 	sprintf(buffer, "%s %s", root_program, result);
 
 	*command = strdup(buffer);
@@ -464,6 +495,80 @@ static int meta_ctx_import(uint32_t argc, char **argv, unused char **command) {
 
 static int meta_ctx_export(uint32_t argc, char **argv, unused char **command) {
 	return 0;
+}
+
+static int meta_store_load(uint32_t argc, char **argv, unused char **command) {
+	if (argc == 1) {
+		print_error("too few arguments\n");
+		return -1;
+	}
+
+	char *import_argv[argc];
+	import_argv[0] = argv[0];
+
+	for (uint32_t i = 1; i < argc; i++) {
+		const store_item *item = store_get(argv[i]);
+		if (item == NULL) {
+			print_error("'%s' not found in store\n", argv[i]);
+		}
+		
+		import_argv[i] = item->filename;
+	}
+
+	return meta_ctx_import(argc, import_argv, command);
+}
+
+static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
+	// TODO: should be calling ctx export
+	return 0;
+}
+
+static int meta_store_ls(uint32_t argc, char **argv, unused char **command) {
+	if (argc != 1) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	const store_item_vector *store = store_get_list();
+	for (uint32_t i = 0; i < store->count; i++) {
+		const store_item *item = vec_at(store, i);
+		printf("%s (%s)\n", item->name, item->filename);
+	}
+
+	return 0;
+}
+
+static int meta_store_edit(uint32_t argc, char **argv, char **command) {
+	if (argc != 2) {
+		print_error("invalid argument count\n");
+		return -1;
+	}
+
+	const store_item *item = store_get(argv[1]);
+	if (item == NULL) {
+		print_error("'%s' not found in store\n", argv[1]);
+		return -1;
+	}
+
+	const char *editor = vars_get("EDITOR");
+	if (editor == NULL) {
+		print_error("EDITOR environment variable is not set\n");
+		return -1;
+	}
+
+	char buffer[strlen(editor) + strlen(item->filename) + 2];
+	sprintf(buffer, "%s %s", editor, item->filename);
+	*command = strdup(buffer);
+	return 1;
+}
+
+static int meta_store_reload(uint32_t argc, char **argv, unused char **command) {
+	if (argc != 1) {
+		print_error("too mary arguments\n");
+		return -1;
+	}
+
+	return store_load(config_path());
 }
 
 /** Internal commands */
