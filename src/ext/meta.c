@@ -65,6 +65,7 @@ static const meta registry[] = {
 	{ .name = ":add", .func = &meta_add, .hidden = 0 },
 	{ .name = ":r", .func = &meta_replace, .hidden = 0 },
 	{ .name = ":replace", .func = &meta_replace, .hidden = 0 },
+	{ .name = ":c", .func = &meta_ctx, .hidden = 0 },
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
 	{ .name = ":s", .func = &meta_store, .hidden = 0 },
 	{ .name = ":store", .func = &meta_store, .hidden = 0 },
