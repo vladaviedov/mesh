@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <c-utils/nanorl.h>
 #include <c-utils/vector.h>
@@ -495,6 +496,46 @@ static int meta_ctx_import(uint32_t argc, char **argv, unused char **command) {
 }
 
 static int meta_ctx_export(uint32_t argc, char **argv, unused char **command) {
+	if (argc > 3) {
+		print_error("too many arguments\n");
+		return -1;
+	}
+
+	char *ctx_name = (argc == 1) ? NULL : argv[1];
+
+	const context *ctx = context_get(ctx_name);
+	if (ctx == NULL) {
+		print_error("context '%s' is not loaded\n");
+		return -1;
+	}
+
+	FILE *out_file;
+	int need_close = 0;
+	if (argc <= 2) {
+		out_file = stdout;
+	} else {
+		out_file = fopen(argv[2], "w");
+		if (out_file == NULL) {
+			print_error("failed to open '%s': %s\n", argv[2], strerror(errno));
+			return -1;
+		}
+
+		need_close = 1;
+	}
+
+	// Print header
+	fprintf(out_file, "%s%s%s\n", DIRECT_START, DIRECT_NAME, ctx->name);
+
+	// Write commands
+	for (uint32_t i = 0; i < ctx->commands.count; i++) {
+		const char * const *command = vec_at(&ctx->commands, i);
+		fprintf(out_file, "%s\n", *command);
+	}
+
+	if (need_close) {
+		fclose(out_file);
+	}
+
 	return 0;
 }
 
@@ -511,6 +552,7 @@ static int meta_store_load(uint32_t argc, char **argv, unused char **command) {
 		const store_item *item = store_get(argv[i]);
 		if (item == NULL) {
 			print_error("'%s' not found in store\n", argv[i]);
+			return -1;
 		}
 		
 		import_argv[i] = item->filename;
@@ -520,7 +562,6 @@ static int meta_store_load(uint32_t argc, char **argv, unused char **command) {
 }
 
 static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
-	// TODO: should be calling ctx export
 	return 0;
 }
 
@@ -563,13 +604,16 @@ static int meta_store_edit(uint32_t argc, char **argv, char **command) {
 	return 1;
 }
 
-static int meta_store_reload(uint32_t argc, char **argv, unused char **command) {
+static int meta_store_reload(uint32_t argc, unused char **argv, unused char **command) {
 	if (argc != 1) {
 		print_error("too mary arguments\n");
 		return -1;
 	}
 
-	return store_load(config_path());
+	char *path = config_path();
+	int res = store_load(path);
+	free(path);
+	return res;
 }
 
 /** Internal commands */
