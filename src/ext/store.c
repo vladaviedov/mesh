@@ -123,12 +123,15 @@ int store_load(const char *path) {
 		free(line);
 	}
 
+	closedir(store_dir);
 	return has_error ? -1 : 0;
 }
 
 const store_item *store_get(const char *name) {
 	if (store_list == NULL) {
-		store_load(config_path());
+		char *path = config_path();
+		store_load(path);
+		free(path);
 	}
 
 	// TODO: replace with better search
@@ -144,7 +147,9 @@ const store_item *store_get(const char *name) {
 
 const store_item_vector *store_get_list(void) {
 	if (store_list == NULL) {
-		store_load(config_path());
+		char *path = config_path();
+		store_load(path);
+		free(path);
 	}
 
 	return store_list;
