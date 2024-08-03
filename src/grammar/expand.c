@@ -48,6 +48,20 @@ char *expand_word(const char *word) {
 			noexpand = !noexpand;
 			pending++;
 			break;
+		case '~': {
+			// Flush pending
+			vec_bulk_push(&expanded, word, pending);
+			word += pending + 1;
+			trav = word;
+			pending = 0;
+
+			const char *home = vars_get("HOME");
+			if (home != NULL) {
+				vec_bulk_push(&expanded, home, strlen(home));
+			}
+
+			break;
+		}
 		case '$':
 			if (noexpand) {
 				pending++;
