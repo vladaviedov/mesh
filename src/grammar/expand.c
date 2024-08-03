@@ -87,6 +87,7 @@ char *expand_word(const char *word) {
 				}
 				free(var_name);
 			}
+			trav = word;
 			break;
 		default:
 			pending++;
