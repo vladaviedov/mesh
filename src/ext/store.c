@@ -19,7 +19,6 @@
 
 #include "../util/helper.h"
 
-#define CTX_EXT ".ctx"
 #define REQ_DIRECT "#:name "
 
 // Cannot include DT_ values in a portable way

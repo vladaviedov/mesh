@@ -25,6 +25,7 @@
 
 #define SPACE_STR " "
 #define IMPORT_CTX_NAME "_import_ctx"
+#define CTX_EXT ".ctx"
 
 #define DIRECT_START "#:"
 #define DIRECT_NAME "name "
@@ -562,10 +563,57 @@ static int meta_store_load(uint32_t argc, char **argv, unused char **command) {
 }
 
 static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
-	return 0;
+	if (argc < 2) {
+		print_error("too few arguments\n");
+		return -1;
+	}
+
+	char *export_argv[3];
+	export_argv[0] = argv[0];
+
+	for (uint32_t i = 1; i < argc; i++) {
+		const store_item *item = store_get(argv[i]);
+
+		char *filepath;
+		if (item == NULL) {
+			char *config = config_path();
+			char *no_ext = path_combine(config, argv[i]);
+
+			filepath = malloc(sizeof(char) * (strlen(no_ext) + 5));
+			sprintf(filepath, "%s%s", no_ext, CTX_EXT);
+
+			free(no_ext);
+			free(config);
+		} else {
+			filepath = item->filename;
+		}
+
+		export_argv[1] = argv[i];
+		export_argv[2] = filepath;
+
+		int res = meta_ctx_export(3, export_argv, command);
+
+		if (res < 0) {
+			fprintf(stderr, "failed to save '%s'\n", argv[i]);
+
+			if (item == NULL) {
+				free(filepath);
+			}
+
+			return res;
+		}
+
+		printf("saved '%s' as '%s'\n", argv[i], filepath);
+
+		if (item == NULL) {
+			free(filepath);
+		}
+	}
+
+	return meta_store_reload(1, NULL, NULL);
 }
 
-static int meta_store_ls(uint32_t argc, char **argv, unused char **command) {
+static int meta_store_ls(uint32_t argc, unused char **argv, unused char **command) {
 	if (argc != 1) {
 		print_error("too many arguments\n");
 		return -1;
