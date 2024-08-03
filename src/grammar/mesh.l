@@ -57,7 +57,7 @@ word {alphanum}|{symbol}|{single_quoted}|{double_quoted}|{escaped}
 	return FDNUM;
 }
 
-{alpha}{alphanum}*={word}+ {
+{alpha}{alphanum}*={word}* {
 	yylval.node = ast_strdup(AST_KIND_ASSIGN, yytext);
 	return ASSIGNMENT;
 }
