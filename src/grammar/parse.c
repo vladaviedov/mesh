@@ -25,11 +25,13 @@ ast_node *parse_from_string(const char *str) {
 
 	ast_node *root = NULL;
 	int result = yyparse(&root);
+
+	yy_delete_buffer(buffer);
+
 	if (result != 0) {
-		print_error("failed to parse input");
+		print_error("syntax error\n");
 		return NULL;
 	}
 
-	yy_delete_buffer(buffer);
 	return root;
 }

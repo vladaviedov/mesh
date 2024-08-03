@@ -180,6 +180,10 @@ static void run_script(const char *filename) {
  */
 static int process_cmd(char *buffer) {
 	ast_node *root = parse_from_string(buffer);
+	if (root == NULL) {
+		return 1;
+	}
+
 	int result = eval_ast(root);
 	ast_recurse_free(root);
 

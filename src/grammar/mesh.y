@@ -157,7 +157,4 @@ separator: LS_SEQ { $$ = AST_SEQ_NORMAL; }
 
 %%
 
-void yyerror(ast_node **root, const char *msg) {
-	fprintf(stderr, "%s\n", msg);
-    exit(1);
-}
+void yyerror(ast_node **root, const char *msg) {}

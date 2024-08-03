@@ -14,7 +14,7 @@
 
 digit [0-9]
 alpha [a-zA-z]
-symbol [-\.\+\$\/?:~]
+symbol [-\.\+\$\/?:~=]
 separator [ \t]
 escaped \\.
 
