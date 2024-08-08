@@ -18,10 +18,11 @@
 #include <c-utils/stack.h>
 #include <c-utils/vector.h>
 
-#include "../core/run.h"
 #include "../grammar/ast.h"
 #include "../grammar/expand.h"
 #include "../util/helper.h"
+#include "flags.h"
+#include "run.h"
 
 // Track quote state
 typedef enum {

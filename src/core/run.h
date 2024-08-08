@@ -11,39 +11,7 @@
 #include <c-utils/vector.h>
 
 #include "../util/helper.h"
-
-typedef enum {
-	RDR_FD,
-	RDR_FILE,
-	RDR_CLOSE,
-} redir_type;
-
-typedef union {
-	int fd;
-	char *filename;
-} redir_src;
-
-typedef struct {
-	redir_type type;
-	int flags;
-
-	int from;
-	redir_src to;
-} redir;
-
-typedef vector redir_vector;
-
-typedef struct {
-	char *key;
-	char *value;
-} assign;
-
-typedef vector assign_vector;
-
-typedef struct {
-	redir_vector redirs;
-	assign_vector assigns;
-} run_flags;
+#include "flags.h"
 
 /**
  * @brief Determines how to run a command and runs it.
@@ -53,18 +21,3 @@ typedef struct {
  * @return Status code.
  */
 int run_dispatch(string_vector *args, run_flags *flags);
-
-/**
- * @brief Copy all flags into a new structure.
- *
- * @param[in] flags - Original flags.
- * @return New flag structure.
- */
-run_flags copy_flags(const run_flags *flags);
-
-/**
- * @brief Delete flag vectors.
- *
- * @param[in] flags - Flags object.
- */
-void del_flags(run_flags *flags);

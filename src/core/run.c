@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <c-utils/vector.h>
 
@@ -22,6 +23,7 @@
 #include "builtins.h"
 #include "eval.h"
 #include "exec.h"
+#include "flags.h"
 
 int run_dispatch(string_vector *args, run_flags *flags) {
 	// Meta commands
@@ -66,18 +68,4 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 
 	// Exec program
 	return exec_normal(argv, flags);
-}
-
-run_flags copy_flags(const run_flags *flags) {
-	run_flags new_flags = {
-		.redirs = vec_init_clone(&flags->redirs),
-		.assigns = vec_init_clone(&flags->assigns),
-	};
-
-	return new_flags;
-}
-
-void del_flags(run_flags *flags) {
-	vec_deinit(&flags->redirs);
-	vec_deinit(&flags->assigns);
 }
