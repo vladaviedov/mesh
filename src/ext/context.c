@@ -113,18 +113,20 @@ const context_vector *context_get_all(void) {
 	return contexts;
 }
 
-const char *context_get_row_abs(uint32_t index) {
+const char *context_get_row(int32_t index) {
 	if (current_ctx == NULL) {
 		print_error("context is not set\n");
 		return NULL;
 	}
 
-	char *const *item = vec_at(&current_ctx->commands, index);
-	return (item != NULL) ? *item : NULL;
-}
+	int32_t abs_index
+		= (index < 0) ? (int32_t)current_ctx->commands.count + index : index;
+	if (abs_index < 0) {
+		return NULL;
+	}
 
-const char *context_get_row_rel(uint32_t index) {
-	return context_get_row_abs(current_ctx->commands.count - index - 1);
+	char *const *item = vec_at(&current_ctx->commands, (uint32_t)abs_index);
+	return (item != NULL) ? *item : NULL;
 }
 
 int context_add(const char *command, context *ctx) {

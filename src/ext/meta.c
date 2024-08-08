@@ -20,8 +20,6 @@
 #include "../util/helper.h"
 #include "context.h"
 
-static int abs_index = 0;
-
 // Meta comamnds
 typedef struct {
 	const char *name;
@@ -31,7 +29,6 @@ typedef struct {
 
 // Shown meta commands
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
-static int meta_abs(uint32_t argc, char **argv, unused char **command);
 static int meta_asroot(uint32_t argc, char **argv, char **command);
 // "Hidden" meta commands
 static int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
@@ -44,7 +41,6 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
-	{ .name = ":abs", .func = &meta_abs, .hidden = 0 },
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
 	{ .name = ":_ctx_show", .func = &meta_ctx_show, .hidden = 1 },
 	{ .name = ":_ctx_set", .func = &meta_ctx_set, .hidden = 1 },
@@ -72,23 +68,8 @@ int run_meta(string_vector *args, char **command) {
 		return result->func(args->count, args->data, command);
 	}
 
-	// Check for numeric meta
-	char *end;
-	uint32_t index = strtoul(*name + 1, &end, 10);
-	if (*end != '\0') {
-		print_error("%s: meta command not found\n", *name + 1);
-		return -1;
-	}
-
-	const char *num_result
-		= abs_index ? context_get_row_abs(index) : context_get_row_rel(index);
-	if (num_result == NULL) {
-		print_error("no such command in context\n");
-		return -1;
-	}
-
-	*command = strdup(num_result);
-	return 1;
+	print_error("meta command not found\n");
+	return -1;
 }
 
 /** Meta commands */
@@ -110,47 +91,16 @@ static int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 	return sub->func(argc - 1, argv + 1, command);
 }
 
-static int meta_abs(uint32_t argc, char **argv, unused char **command) {
-	if (argc > 2) {
-		print_error("too many arguments\n");
-		return -1;
-	}
-
-	if (argc == 2) {
-		switch (argv[1][0]) {
-		case '0':
-			abs_index = 0;
-			break;
-		case '1':
-			abs_index = 1;
-			break;
-		default:
-			print_error("invalid argument\n");
-			return -1;
-		}
-	} else {
-		abs_index = !abs_index;
-	}
-
-	if (abs_index) {
-		printf("using absolute indexing\n");
-	} else {
-		printf("using relative indexing\n");
-	}
-
-	return 0;
-}
-
 static int meta_asroot(uint32_t argc, char **argv, char **command) {
 	if (argc > 2) {
 		print_error("too many arguments\n");
 		return -1;
 	}
 
-	uint32_t index = 0;
+	int32_t index = -1;
 	if (argc == 2) {
 		char *end;
-		index = strtoul(argv[1], &end, 10);
+		index = strtol(argv[1], &end, 10);
 
 		if (*end != '\0') {
 			print_error("argument must be a row\n");
@@ -158,8 +108,7 @@ static int meta_asroot(uint32_t argc, char **argv, char **command) {
 		}
 	}
 
-	const char *result
-		= abs_index ? context_get_row_abs(index) : context_get_row_rel(index);
+	const char *result = context_get_row(index);
 	if (result == NULL) {
 		print_error("no such command in context\n");
 		return -1;
@@ -201,8 +150,7 @@ static int meta_ctx_show(uint32_t argc, char **argv, unused char **command) {
 	// Print context information
 	printf("Context name: %s\n\n", ctx->name);
 	for (uint32_t i = 0; i < ctx->commands.count; i++) {
-		uint32_t index = abs_index ? i : ctx->commands.count - i - 1;
-		printf("%u: %s\n", index, *(char *const *)vec_at(&ctx->commands, i));
+		printf("%u: %s\n", i, *(char *const *)vec_at(&ctx->commands, i));
 	}
 
 	return 0;

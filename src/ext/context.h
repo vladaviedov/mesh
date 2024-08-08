@@ -62,18 +62,10 @@ const vector *context_get_all(void);
 /**
  * @brief Get row from current context.
  *
- * @param[in] index - Absolute index.
+ * @param[in] index - Index; positive is absolute, negative is relative.
  * @return Command at index; NULL on error.
  */
-const char *context_get_row_abs(uint32_t index);
-
-/**
- * @brief Get row from current context.
- *
- * @param[in] index - Relative index.
- * @return Command at index; NULL on error.
- */
-const char *context_get_row_rel(uint32_t index);
+const char *context_get_row(int32_t index);
 
 /**
  * @brief Add new command to the context.
