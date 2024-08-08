@@ -49,6 +49,11 @@ char *expand_word(const char *word) {
 			pending++;
 			break;
 		case '~': {
+			if (noexpand) {
+				pending++;
+				break;
+			}
+
 			// Flush pending
 			vec_bulk_push(&expanded, word, pending);
 			word += pending + 1;
