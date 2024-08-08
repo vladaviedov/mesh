@@ -15,3 +15,13 @@
  * @return Expanded string.
  */
 char *expand_word(const char *word);
+
+/**
+ * @brief Make changes to the buffer before the parser is run.
+ *
+ * @param[in] input - Input buffer.
+ * @param[out] output - Output buffer.
+ * @return 0 on success; -1 on error.
+ * @note Allocated value placed in output.
+ */
+int preprocess_buffer(const char *input, char **output);

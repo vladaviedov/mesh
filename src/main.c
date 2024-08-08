@@ -179,16 +179,24 @@ static void run_script(const char *filename) {
  * @return Status code.
  */
 static int process_cmd(char *buffer) {
-	ast_node *root = parse_from_string(buffer);
+	char *processed;
+	if (preprocess_buffer(buffer, &processed) < 0) {
+		return 1;
+	}
+
+	ast_node *root = parse_from_string(processed);
 	if (root == NULL) {
+		free(processed);
 		return 1;
 	}
 
 	int result = eval_ast(root);
 	ast_recurse_free(root);
 
-	if (buffer[0] != ':') {
-		context_hist_add(strdup(buffer));
+	if (processed[0] != ':') {
+		context_hist_add(processed);
+	} else {
+		free(processed);
 	}
 
 	return result;

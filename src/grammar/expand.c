@@ -22,6 +22,7 @@
 #include "../core/exec.h"
 #include "../core/scope.h"
 #include "../core/vars.h"
+#include "../ext/context.h"
 #include "../util/helper.h"
 
 #define RD_BUF_LEN 1024
@@ -121,6 +122,60 @@ char *expand_word(const char *word) {
 	// Null-terminate string
 	vec_push(&expanded, &null_char);
 	return vec_collect(&expanded);
+}
+
+int preprocess_buffer(const char *input, char **output) {
+	char_vector expanded = vec_init(sizeof(char));
+
+	int noexpand = 0;
+	uint32_t pending = 0;
+
+	const char *trav = input;
+	char ch;
+	while ((ch = *trav++) != '\0') {
+		switch (ch) {
+		case '\'':
+			noexpand = !noexpand;
+			pending++;
+			break;
+		case ':':
+			if (noexpand || (!isdigit(*trav) && *trav != '-')) {
+				pending++;
+				break;
+			}
+
+			// Flush pending
+			vec_bulk_push(&expanded, input, pending);
+			input += pending;
+			pending = 0;
+
+			// Parse index
+			int32_t index = strtol(trav, (char **)&input, 10);
+
+			const char *value = context_get_row(index);
+			if (value == NULL) {
+				print_warning("no row '%d' in current context\n", index);
+				vec_deinit(&expanded);
+				return -1;
+			} else {
+				vec_bulk_push(&expanded, value, strlen(value));
+				trav = input;
+			}
+			break;
+		default:
+			pending++;
+			break;
+		}
+	}
+
+	if (pending > 0) {
+		vec_bulk_push(&expanded, input, pending);
+	}
+
+	// Null-terminate string
+	vec_push(&expanded, &null_char);
+	*output = vec_collect(&expanded);
+	return 0;
 }
 
 /**
