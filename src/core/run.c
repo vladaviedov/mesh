@@ -28,7 +28,13 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 	char *const *argv0 = vec_at(args, 0);
 	if (**argv0 == ':') {
 		char *meta_out;
-		int meta_result = run_meta(args, &meta_out);
+		const meta *meta_cmd = search_meta(*argv0);
+		if (meta_cmd == NULL) {
+			print_error("%s: meta command not found", *argv0 + 1);
+			return -1;
+		}
+
+		int meta_result = run_meta(meta_cmd, args, &meta_out);
 
 		if (meta_result < 0) {
 			return -1;
@@ -48,9 +54,9 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 	}
 
 	// Builtins
-	int code = run_builtin(args);
-	if (code >= 0) {
-		return code;
+	const builtin *command = search_builtins(*argv0);
+	if (command != NULL) {
+		return run_builtin(command, args);
 	}
 
 	// Add null-terminator to args

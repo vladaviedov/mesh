@@ -27,10 +27,11 @@
 #define CODE_EXIT_ERROR 128
 
 // Builtin table entry
-typedef struct {
+// Note: typedef in header
+struct builtin {
 	const char *name;
 	int (*const func)(uint32_t argc, char **argv);
-} builtin;
+};
 
 // Builtin functions
 static int shell_exit(uint32_t argc, char **argv);
@@ -49,9 +50,6 @@ static const builtin registry[] = {
 };
 static const size_t registry_length = sizeof(registry) / sizeof(builtin);
 
-// Helper functions
-static const builtin *find_builtin(const char *name);
-
 int pure_assign(uint32_t count, char **args, int export_flag) {
 	for (uint32_t i = 0; i < count; i++) {
 		char *key = strtok(args[i], "=");
@@ -68,14 +66,18 @@ int pure_assign(uint32_t count, char **args, int export_flag) {
 	return 0;
 }
 
-int run_builtin(string_vector *args) {
-	char *const *name = vec_at(args, 0);
-	const builtin *result = find_builtin(*name);
-	if (result == NULL) {
-		return -1;
+const builtin *search_builtins(const char *name) {
+	for (size_t i = 0; i < registry_length; i++) {
+		if (strcmp(registry[i].name, name) == 0) {
+			return registry + i;
+		}
 	}
 
-	return result->func(args->count, args->data);
+	return NULL;
+}
+
+int run_builtin(const builtin *cmd, string_vector *args) {
+	return cmd->func(args->count, args->data);
 }
 
 /** Builtin implementations */
@@ -171,22 +173,4 @@ static int shell_exec(uint32_t argc, char **argv) {
 
 	print_error("exec: %s: command not found\n", exec_argv[0]);
 	return CODE_GEN_ERROR;
-}
-
-/** Internal functions */
-
-/**
- * @brief Find builtin in the registry.
- *
- * @param[in] name - Search query.
- * @return Builtin entry; NULL on error.
- */
-static const builtin *find_builtin(const char *name) {
-	for (size_t i = 0; i < registry_length; i++) {
-		if (strcmp(registry[i].name, name) == 0) {
-			return registry + i;
-		}
-	}
-
-	return NULL;
 }

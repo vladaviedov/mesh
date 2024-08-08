@@ -21,11 +21,12 @@
 #include "context.h"
 
 // Meta comamnds
-typedef struct {
+// Note: typedef in header
+struct meta {
 	const char *name;
 	int (*const func)(uint32_t argc, char **argv, char **command);
 	int hidden;
-} meta;
+};
 
 // Shown meta commands
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
@@ -52,24 +53,25 @@ static const meta registry[] = {
 static const size_t registry_length = sizeof(registry) / sizeof(meta);
 
 // Helper functions
-static const meta *find_meta(const char *name);
 static const char *get_root_program(void);
 
-int run_meta(string_vector *args, char **command) {
-	// Check for standard meta
-	char *const *name = vec_at(args, 0);
-	const meta *result = find_meta(*name);
-	if (result != NULL) {
-		if (result->hidden) {
-			print_warning("this command is not intended to be called directly "
-						  "from the shell\n");
+const meta *search_meta(const char *name) {
+	for (size_t i = 0; i < registry_length; i++) {
+		if (strcmp(registry[i].name, name) == 0) {
+			return registry + i;
 		}
-
-		return result->func(args->count, args->data, command);
 	}
 
-	print_error("meta command not found\n");
-	return -1;
+	return NULL;
+}
+
+int run_meta(const meta *cmd, string_vector *args, char **command) {
+	if (cmd->hidden) {
+		print_warning("this command is not intended to be called directly "
+					  "from the shell\n");
+	}
+
+	return cmd->func(args->count, args->data, command);
 }
 
 /** Meta commands */
@@ -82,7 +84,7 @@ static int meta_ctx(uint32_t argc, char **argv, unused char **command) {
 
 	char sub_name[1024];
 	snprintf(sub_name, 1024, ":_ctx_%s", argv[1]);
-	const meta *sub = find_meta(sub_name);
+	const meta *sub = search_meta(sub_name);
 	if (sub == NULL) {
 		print_error("ctx subcommand '%s' does not exist\n", argv[1]);
 		return -1;
@@ -257,22 +259,6 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
 }
 
 /** Internal commands */
-
-/**
- * @brief Find builtin in the registry.
- *
- * @param[in] name - Search query.
- * @return Builtin entry; NULL on error.
- */
-static const meta *find_meta(const char *name) {
-	for (size_t i = 0; i < registry_length; i++) {
-		if (strcmp(registry[i].name, name) == 0) {
-			return registry + i;
-		}
-	}
-
-	return NULL;
-}
 
 static const char *root_prog;
 

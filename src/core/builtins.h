@@ -14,6 +14,8 @@
 
 #include "../util/helper.h"
 
+typedef struct builtin builtin;
+
 /**
  * @brief Assign requested variables.
  *
@@ -25,9 +27,18 @@
 int pure_assign(uint32_t count, char **args, int export_flag);
 
 /**
+ * @brief Search the built-in registry by name.
+ *
+ * @param[in] name - Name of command.
+ * @return Built-in identifier; NULL if not found.
+ */
+const builtin *search_builtins(const char *name);
+
+/**
  * @brief Run shell builtin.
  *
+ * @param[in] cmd - Built-in identifier.
  * @param[in] args - Argument vector.
  * @return Exit code; -1 if not found.
  */
-int run_builtin(string_vector *args);
+int run_builtin(const builtin *cmd, string_vector *args);
