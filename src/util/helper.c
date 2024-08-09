@@ -9,6 +9,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "helper.h"
 
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,8 @@
 char null_char = '\0';
 static const char *const *argv0 = NULL;
 
+static int try_fd_reset(void);
+
 void set_argv0(const char *const *name) {
 	argv0 = name;
 }
@@ -33,6 +36,8 @@ void *ntmalloc(size_t count, size_t type_size) {
 }
 
 noreturn void print_fatal_hcf(const char *format, ...) {
+	int reset_result = try_fd_reset();
+
 	va_list args;
 	va_start(args, format);
 
@@ -40,6 +45,10 @@ noreturn void print_fatal_hcf(const char *format, ...) {
 	vfprintf(stderr, format, args);
 
 	va_end(args);
+
+	if (reset_result < 0) {
+		exit(1);
+	}
 
 	fprintf(stderr, FATAL_PREFIX);
 	fprintf(stderr, "Restart mesh? [Y/n] ");
@@ -81,4 +90,17 @@ void free_elements(vector *vec) {
 	}
 
 	free(data);
+}
+
+static int try_fd_reset(void) {
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
+	if (open("/dev/tty", O_RDWR) < 0 || open("/dev/tty", O_RDWR) < 0
+		|| open("/dev/tty", O_RDWR) < 0) {
+		return -1;
+	}
+
+	return 0;
 }
