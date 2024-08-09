@@ -13,16 +13,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
+#define FATAL_PREFIX "FATAL: "
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "
 
 char null_char = '\0';
+static const char *const *argv0 = NULL;
+
+void set_argv0(const char *const *name) {
+	argv0 = name;
+}
 
 void *ntmalloc(size_t count, size_t type_size) {
 	void *ptr = malloc((count + 1) * type_size);
 	memset(ptr + count * type_size, 0, type_size);
 	return ptr;
+}
+
+noreturn void print_fatal_hcf(const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+
+	fprintf(stderr, FATAL_PREFIX);
+	vfprintf(stderr, format, args);
+
+	va_end(args);
+
+	fprintf(stderr, FATAL_PREFIX);
+	fprintf(stderr, "Restart mesh? [Y/n] ");
+
+	if (getchar() != 'n') {
+		execlp(*argv0, *argv0, NULL);
+		fprintf(stderr, FATAL_PREFIX);
+		fprintf(stderr, "Failed to restart mesh\n");
+	}
+
+	exit(1);
 }
 
 void print_error(const char *format, ...) {

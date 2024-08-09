@@ -19,7 +19,7 @@
 #include "scope.h"
 #include "vars.h"
 
-static int partial_revert_redirs(run_flags *flags, uint32_t stop_index);
+static void partial_revert_redirs(run_flags *flags, uint32_t stop_index);
 static int redirect(const redir *op);
 
 run_flags copy_flags(const run_flags *flags) {
@@ -94,9 +94,11 @@ int apply_flags_reversibly(run_flags *flags) {
 	return 0;
 }
 
-int revert_flags(const run_flags *flags) {
+void revert_flags(const run_flags *flags) {
 	scope_delete_frame();
-	return apply_flags(flags);
+	if (apply_flags(flags) < 0) {
+		print_fatal_hcf("failed to revert redirections\n");
+	}
 }
 
 /**
@@ -139,16 +141,14 @@ static int redirect(const redir *op) {
  *
  * @param[in] flags - Partial backup flag data.
  * @param[in] stop_index - Finish index (exclusive).
- * @return 0 on success; -1 on error.
  */
-static int partial_revert_redirs(run_flags *flags, uint32_t stop_index) {
+static void partial_revert_redirs(run_flags *flags, uint32_t stop_index) {
 	// Fake count for the operation to end early
 	uint32_t count = flags->redirs.count;
 	flags->redirs.count = stop_index;
 
-	int res = revert_flags(flags);
+	revert_flags(flags);
 
 	// Restore count
 	flags->redirs.count = count;
-	return res;
 }

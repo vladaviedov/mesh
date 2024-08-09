@@ -40,6 +40,8 @@ static void run_script(const char *filename);
 static int process_cmd(char *buffer);
 
 int main(int argc, char **argv) {
+	set_argv0((const char *const *)argv);
+
 	set_vars();
 	scope_init();
 

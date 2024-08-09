@@ -14,8 +14,10 @@
 
 #ifdef __GNUC__
 #define unused __attribute__((unused))
+#define noreturn __attribute__((noreturn))
 #else
 #define unused
+#define noreturn
 #endif
 
 typedef vector string_vector;
@@ -31,6 +33,21 @@ extern char null_char;
  * @note Allocated return value.
  */
 void *ntmalloc(size_t count, size_t type_size);
+
+/**
+ * @brief Store mesh's invokation name.
+ *
+ * @param[in] name - argv[0]
+ */
+void set_argv0(const char *const *argv0);
+
+/**
+ * @brief Print shell fatal message and exit.
+ *
+ * @param[in] format - Printf format string.
+ * @param[in] ... - Printf variable args.
+ */
+noreturn void print_fatal_hcf(const char *format, ...);
 
 /**
  * @brief Print shell error.

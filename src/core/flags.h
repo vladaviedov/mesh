@@ -78,6 +78,6 @@ int apply_flags_reversibly(run_flags *flags);
  * @brief Revert flags from backup data.
  *
  * @param[in] flags - Backup flag data.
- * @return 0 on success; -1 on failure.
+ * @note Will fatal if error occurs.
  */
-int revert_flags(const run_flags *flags);
+void revert_flags(const run_flags *flags);
