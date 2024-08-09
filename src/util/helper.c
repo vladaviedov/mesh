@@ -15,12 +15,9 @@
 #include <string.h>
 #include <unistd.h>
 
-<<<<<<< HEAD
-#define FATAL_PREFIX "FATAL: "
-=======
 #include "../core/vars.h"
 
->>>>>>> 6f4225c (new meta command: store load/ls/edit/reload)
+#define FATAL_PREFIX "FATAL: "
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "
 
