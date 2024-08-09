@@ -70,6 +70,13 @@ int apply_flags_reversibly(run_flags *flags) {
 			return -1;
 		}
 
+		// Set O_CLOEXEC (to close fds on fatal error)
+		int fd_flags = fcntl(backup, F_GETFD);
+		fcntl(backup, F_SETFD, fd_flags | FD_CLOEXEC);
+		if (op->type == RDR_FILE) {
+			op->flags |= O_CLOEXEC;
+		}
+
 		if (redirect(op) < 0) {
 			partial_revert_redirs(flags, i);
 			return -1;
