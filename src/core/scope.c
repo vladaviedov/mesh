@@ -176,6 +176,14 @@ int scope_delete_frame(void) {
 	}
 
 	// Delete scope
+	for (uint32_t i = 0; i < frame.vars.count; i++) {
+		scoped_var *var = vec_at_mut(&frame.vars, i);
+		if (!var->is_pos) {
+			free(var->key.name);
+		}
+
+		free(var->value);
+	}
 	vec_deinit(&frame.vars);
 
 	// Load old scope

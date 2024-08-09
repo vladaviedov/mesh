@@ -9,6 +9,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "run.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -32,17 +33,21 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 		char *meta_out;
 		const meta *meta_cmd = search_meta(*argv0);
 		if (meta_cmd == NULL) {
-			print_error("%s: meta command not found", *argv0 + 1);
+			print_error("%s: meta command not found\n", *argv0 + 1);
+			return -1;
+		}
+
+		if (apply_flags_reversibly(flags) < 0) {
 			return -1;
 		}
 
 		int meta_result = run_meta(meta_cmd, args, &meta_out);
+		fflush(stdout);
+		fflush(stderr);
 
-		if (meta_result < 0) {
-			return -1;
-		}
-		if (meta_result == 0) {
-			return 0;
+		if (meta_result <= 0) {
+			revert_flags(flags);
+			return meta_result;
 		}
 
 		ast_node *parsed = parse_from_string(meta_out);
@@ -52,13 +57,23 @@ int run_dispatch(string_vector *args, run_flags *flags) {
 		context_hist_add(strdup(meta_out));
 
 		free(meta_out);
+		revert_flags(flags);
 		return meta_result;
 	}
 
 	// Builtins
 	const builtin *command = search_builtins(*argv0);
 	if (command != NULL) {
-		return run_builtin(command, args);
+		if (apply_flags_reversibly(flags) < 0) {
+			return -1;
+		}
+
+		int res = run_builtin(command, args);
+		fflush(stdout);
+		fflush(stderr);
+
+		revert_flags(flags);
+		return res;
 	}
 
 	// Add null-terminator to args

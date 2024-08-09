@@ -54,7 +54,10 @@ int eval_ast(ast_node *root) {
 		.assigns = vec_init(sizeof(assign)),
 	};
 
-	return eval_child(root, &empty_set);
+	int result = eval_child(root, &empty_set);
+	del_flags(&empty_set);
+
+	return result;
 }
 
 /**

@@ -80,7 +80,7 @@ int apply_flags_reversibly(run_flags *flags) {
 			op->type = RDR_CLOSE;
 		} else {
 			// If it was open, redirect it back
-			op->from = RDR_FD;
+			op->type = RDR_FD;
 			op->to.fd = backup;
 		}
 	}
@@ -95,9 +95,21 @@ int apply_flags_reversibly(run_flags *flags) {
 }
 
 void revert_flags(const run_flags *flags) {
+	// Revert assignments
 	scope_delete_frame();
+
+	// Revert redirections
 	if (apply_flags(flags) < 0) {
 		print_fatal_hcf("failed to revert redirections\n");
+	}
+
+	// Close backup file descriptors
+	for (uint32_t i = 0; i < flags->redirs.count; i++) {
+		const redir *op = vec_at(&flags->redirs, i);
+
+		if (op->type == RDR_FD) {
+			close(op->to.fd);
+		}
 	}
 }
 
@@ -111,19 +123,18 @@ static int redirect(const redir *op) {
 	switch (op->type) {
 	case RDR_FD:
 		if (dup2(op->to.fd, op->from) < 0) {
-			print_error("dup failed\n");
 			return -1;
 		}
 		break;
 	case RDR_FILE: {
 		int file_fd = open(op->to.filename, op->flags, 0644);
 		if (file_fd < 0) {
-			print_error(
-				"open failed on %s: %s\n", op->to.filename, strerror(errno));
 			return -1;
 		}
-		if (dup2(file_fd, op->from) < 0) {
-			print_error("dup failed\n");
+
+		int res = dup2(file_fd, op->from);
+		close(file_fd);
+		if (res < 0) {
 			return -1;
 		}
 		break;
