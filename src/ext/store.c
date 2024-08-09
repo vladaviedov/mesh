@@ -10,11 +10,11 @@
 #include "store.h"
 
 #include <dirent.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 #include <errno.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 
 #include "../util/helper.h"
@@ -117,7 +117,7 @@ int store_load(const char *path) {
 
 		vec_push(store_list, &s);
 
-	next_file:
+next_file:
 		fclose(fp);
 		free(line);
 	}

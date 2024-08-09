@@ -9,10 +9,10 @@
 #define _POSIX_C_SOURCE 200809L
 #include "meta.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include <c-utils/nanorl.h>
 #include <c-utils/vector.h>
@@ -92,6 +92,7 @@ static const size_t registry_length = sizeof(registry) / sizeof(meta);
 // Helper functions
 static const char *get_root_program(void);
 static char *unsplit(uint32_t count, char **words);
+static int load_ctx_from_file(FILE *infile, const char *filename);
 
 const meta *search_meta(const char *name) {
 	for (size_t i = 0; i < registry_length; i++) {
@@ -148,7 +149,7 @@ static int meta_replace(uint32_t argc, char **argv, unused char **command) {
 		print_error("invalid command index\n");
 		return -1;
 	}
-	
+
 	// Relative indexing
 	if (item < 0) {
 		item = context_get(NULL)->commands.count + item;
@@ -385,112 +386,27 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command) {
 	return 0;
 }
 
+static uint32_t stdin_import_counter = 0;
+
 static int meta_ctx_import(uint32_t argc, char **argv, unused char **command) {
+	// Import from stdin
 	if (argc == 1) {
-		print_error("not enough arguments\n");
-		return -1;
+		char default_name[32];
+		snprintf(default_name, 32, "stdin_%u", stdin_import_counter);
+		if (load_ctx_from_file(stdin, default_name) < 0) {
+			return -1;
+		}
+
+		stdin_import_counter++;
+		return 0;
 	}
 
 	int some_failed = 0;
 	for (uint32_t i = 1; i < argc; i++) {
 		FILE *source = fopen(argv[i], "r");
-
-		char *line = NULL;
-		size_t _ = 0;
-
-		context *ctx;
-		if (context_new(IMPORT_CTX_NAME, &ctx) < 0) {
-			print_error("failed to create a new context\n");
-			return -1;
-		}
-
-		int error = 0;
-		while (!error && getline(&line, &_, source) > 0) {
-			// Remove newline and spaces at the end
-			char *nl = strchr(line, '\n');
-			if (nl != NULL) {
-				*nl = '\0';
-			}
-			while (--nl > line) {
-				char ch = *nl;
-				
-				if (ch == ' ' || ch == '\t') {
-					*nl = '\0';
-				} else {
-					break;
-				}
-			}
-
-			// Trim leading spaces
-			char *trimmed = line;
-			while (*trimmed != '\0') {
-				char ch = *trimmed;
-
-				if (ch == ' ' || ch == '\t') {
-					trimmed++;
-				} else {
-					break;
-				}
-			}
-
-			// Parse directives
-			if (strncmp(trimmed, DIRECT_START, strlen(DIRECT_START)) == 0) {
-				if (strncmp(trimmed + strlen(DIRECT_START), DIRECT_NAME, strlen(DIRECT_NAME)) == 0) {
-					uint32_t name_start = strlen(DIRECT_START) + strlen(DIRECT_NAME);
-					if (strlen(trimmed) < name_start) {
-						print_error("%s: no argument to name", argv[i]);
-						error = 1;
-						goto line_cleanup;
-					}
-
-					// Reserved
-					if (trimmed[name_start] == '_') {
-						print_error("%s: invalid context name\n", argv[i]);
-						error = 1;
-						goto line_cleanup;
-					}
-
-					free(ctx->name);
-					ctx->name = strdup(trimmed + name_start);
-				} else {
-					print_error("%s: invalid directive '%s'\n", argv[i], trimmed + 2);
-					error = 1;
-					goto line_cleanup;
-				}
-			}
-
-			// Ignore comment and empty lines
-			if (strlen(trimmed) == 0 || trimmed[0] == '#') {
-				goto line_cleanup;
-			}
-
-			context_add(strdup(trimmed), ctx);
-
-		line_cleanup:
-			free(line);
-			line = NULL;
-		}
-
-		if (line != NULL) {
-			free(line);
-		}
-
-		fclose(source);
-
-		if (error) {
-			print_error("failed to import from %s\n", argv[i]);
-			context_delete(IMPORT_CTX_NAME);
+		if (load_ctx_from_file(source, argv[i]) < 0) {
 			some_failed = 1;
-			break;
 		}
-
-		// If name is not modified, use filename
-		if (ctx->name[0] == '_') {
-			free(ctx->name);
-			ctx->name = strdup(argv[i]);
-		}
-
-		printf("imported '%s' as '%s'\n", argv[i], ctx->name);
 	}
 
 	return some_failed ? -1 : 0;
@@ -529,7 +445,7 @@ static int meta_ctx_export(uint32_t argc, char **argv, unused char **command) {
 
 	// Write commands
 	for (uint32_t i = 0; i < ctx->commands.count; i++) {
-		const char * const *command = vec_at(&ctx->commands, i);
+		const char *const *command = vec_at(&ctx->commands, i);
 		fprintf(out_file, "%s\n", *command);
 	}
 
@@ -555,7 +471,7 @@ static int meta_store_load(uint32_t argc, char **argv, unused char **command) {
 			print_error("'%s' not found in store\n", argv[i]);
 			return -1;
 		}
-		
+
 		import_argv[i] = item->filename;
 	}
 
@@ -613,7 +529,8 @@ static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
 	return meta_store_reload(1, NULL, NULL);
 }
 
-static int meta_store_ls(uint32_t argc, unused char **argv, unused char **command) {
+static int meta_store_ls(
+	uint32_t argc, unused char **argv, unused char **command) {
 	if (argc != 1) {
 		print_error("too many arguments\n");
 		return -1;
@@ -652,7 +569,8 @@ static int meta_store_edit(uint32_t argc, char **argv, char **command) {
 	return 1;
 }
 
-static int meta_store_reload(uint32_t argc, unused char **argv, unused char **command) {
+static int meta_store_reload(
+	uint32_t argc, unused char **argv, unused char **command) {
 	if (argc != 1) {
 		print_error("too mary arguments\n");
 		return -1;
@@ -727,4 +645,105 @@ static char *unsplit(uint32_t count, char **words) {
 	}
 
 	return combined;
+}
+
+static int load_ctx_from_file(FILE *infile, const char *filename) {
+	char *line = NULL;
+	size_t _ = 0;
+
+	context *ctx;
+	if (context_new(IMPORT_CTX_NAME, &ctx) < 0) {
+		print_error("failed to create a new context\n");
+		return -1;
+	}
+
+	int error = 0;
+	while (!error && getline(&line, &_, infile) > 0) {
+		// Remove newline and spaces at the end
+		char *nl = strchr(line, '\n');
+		if (nl != NULL) {
+			*nl = '\0';
+		}
+		while (--nl > line) {
+			char ch = *nl;
+
+			if (ch == ' ' || ch == '\t') {
+				*nl = '\0';
+			} else {
+				break;
+			}
+		}
+
+		// Trim leading spaces
+		char *trimmed = line;
+		while (*trimmed != '\0') {
+			char ch = *trimmed;
+
+			if (ch == ' ' || ch == '\t') {
+				trimmed++;
+			} else {
+				break;
+			}
+		}
+
+		// Parse directives
+		if (strncmp(trimmed, DIRECT_START, strlen(DIRECT_START)) == 0) {
+			if (strncmp(trimmed + strlen(DIRECT_START), DIRECT_NAME,
+					strlen(DIRECT_NAME))
+				== 0) {
+				uint32_t name_start
+					= strlen(DIRECT_START) + strlen(DIRECT_NAME);
+				if (strlen(trimmed) < name_start) {
+					print_error("%s: no argument to name", filename);
+					error = 1;
+					goto line_cleanup;
+				}
+
+				// Reserved
+				if (trimmed[name_start] == '_') {
+					print_error("%s: invalid context name\n", filename);
+					error = 1;
+					goto line_cleanup;
+				}
+
+				free(ctx->name);
+				ctx->name = strdup(trimmed + name_start);
+			} else {
+				print_error(
+					"%s: invalid directive '%s'\n", filename, trimmed + 2);
+				error = 1;
+				goto line_cleanup;
+			}
+		}
+
+		// Ignore comment and empty lines
+		if (strlen(trimmed) == 0 || trimmed[0] == '#') {
+			goto line_cleanup;
+		}
+
+		context_add(strdup(trimmed), ctx);
+
+line_cleanup:
+		free(line);
+		line = NULL;
+	}
+
+	if (line != NULL) {
+		free(line);
+	}
+
+	if (error) {
+		print_error("failed to import from %s\n", filename);
+		context_delete(IMPORT_CTX_NAME);
+		return -1;
+	}
+
+	// If name is not modified, use filename
+	if (ctx->name[0] == '_') {
+		free(ctx->name);
+		ctx->name = strdup(filename);
+	}
+
+	printf("imported '%s' as '%s'\n", filename, ctx->name);
+	return 0;
 }
