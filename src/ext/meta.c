@@ -150,8 +150,8 @@ static int meta_replace(uint32_t argc, char **argv, unused char **command) {
 	}
 	
 	// Relative indexing
-	if (!abs_index) {
-		item = context_get(NULL)->commands.count - item - 1;
+	if (item < 0) {
+		item = context_get(NULL)->commands.count + item;
 	}
 
 	if (argc == 2) {
