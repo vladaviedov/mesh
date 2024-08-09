@@ -31,6 +31,8 @@ struct meta {
 // Shown meta commands
 static int meta_ctx(uint32_t argc, char **argv, unused char **command);
 static int meta_asroot(uint32_t argc, char **argv, char **command);
+static noreturn int meta_hcf(
+	unused uint32_t argc, unused char **argv, unused char **command);
 // "Hidden" meta commands
 static int meta_ctx_show(uint32_t argc, char **argv, unused char **command);
 static int meta_ctx_set(uint32_t argc, char **argv, unused char **command);
@@ -43,6 +45,7 @@ static int meta_ctx_del(uint32_t argc, char **argv, unused char **command);
 static const meta registry[] = {
 	{ .name = ":ctx", .func = &meta_ctx, .hidden = 0 },
 	{ .name = ":asroot", .func = &meta_asroot, .hidden = 0 },
+	{ .name = ":hcf", .func = &meta_hcf, .hidden = 0 },
 	{ .name = ":_ctx_show", .func = &meta_ctx_show, .hidden = 1 },
 	{ .name = ":_ctx_set", .func = &meta_ctx_set, .hidden = 1 },
 	{ .name = ":_ctx_ls", .func = &meta_ctx_ls, .hidden = 1 },
@@ -128,6 +131,11 @@ static int meta_asroot(uint32_t argc, char **argv, char **command) {
 
 	*command = strdup(buffer);
 	return 1;
+}
+
+static noreturn int meta_hcf(
+	unused uint32_t argc, unused char **argv, unused char **command) {
+	print_fatal_hcf("User-invoked crash\n");
 }
 
 /** Hidden meta commands */
