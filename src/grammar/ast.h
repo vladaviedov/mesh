@@ -10,8 +10,6 @@
 
 #include <c-utils/vector.h>
 
-typedef vector string_vector;
-
 typedef enum {
 	// Enum value
 	AST_KIND_SEQ,
@@ -25,8 +23,6 @@ typedef enum {
 	// No value
 	AST_KIND_PIPE,
 	AST_KIND_JOIN,
-	// Processed
-	AST_KIND_ARGV,
 } ast_kind;
 
 typedef enum {
@@ -63,8 +59,6 @@ typedef union {
 
 	char *str;
 	int fdnum;
-
-	string_vector *argv;
 } ast_value;
 
 typedef struct ast_node {
@@ -141,14 +135,6 @@ ast_node *ast_make_pipe(ast_node *left, ast_node *right);
  * @return New AST node.
  */
 ast_node *ast_make_join(ast_node *left, ast_node *right);
-
-/**
- * @brief Create a argv AST node.
- *
- * @param[in] argv - Arg vector.
- * @return New AST Node.
- */
-ast_node *ast_make_argv(string_vector *argv);
 
 /**
  * @brief Duplicate a string into a string-type node.

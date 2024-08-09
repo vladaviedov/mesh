@@ -51,11 +51,6 @@ ast_node *ast_make_join(ast_node *left, ast_node *right) {
 	return ast_make_noval_node(AST_KIND_JOIN, left, right);
 }
 
-ast_node *ast_make_argv(string_vector *argv) {
-	ast_value astv = { .argv = argv };
-	return ast_make_node(AST_KIND_ARGV, astv, NULL, NULL);
-}
-
 ast_node *ast_strdup(ast_kind kind, const char *value) {
 	ast_value val = { .str = strdup(value) };
 	return ast_make_node(kind, val, NULL, NULL);
