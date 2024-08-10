@@ -135,7 +135,7 @@ static int meta_asroot(uint32_t argc, char **argv, char **command) {
 
 static noreturn int meta_hcf(
 	unused uint32_t argc, unused char **argv, unused char **command) {
-	print_fatal_hcf("User-invoked crash\n");
+	print_fatal_hcf("user-invoked crash\n");
 }
 
 /** Hidden meta commands */
