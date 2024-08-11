@@ -19,6 +19,9 @@ OBJS=$(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 FLEX_OBJ=$(OBJ_DIR)/grammar/lex.yy.o
 YACC_OBJ=$(OBJ_DIR)/grammar/y.tab.o
 
+.PHONY: build
+build: $(BUILD) $(TARGET)
+
 # Templates
 define make_build_dir
 $(1):
@@ -34,9 +37,6 @@ define compile_subdir
 $(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(OBJ_DIR)/$(1)
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
-
-.PHONY: build
-build: $(BUILD) $(TARGET)
 
 # Build directory rules
 $(foreach build_dir, $(BUILD_DIRS), \
@@ -61,7 +61,6 @@ $(TARGET): $(BUILD) $(LIBUTILS) $(OBJS) $(YACC_OBJ) $(FLEX_OBJ)
 	$(CC) -o $@ $(OBJS) $(YACC_OBJ) $(FLEX_OBJ) $(LDFLAGS)
 
 # Build root
-$(eval $(call mk_subdir,))
 $(eval $(call compile_subdir,))
 
 # Build subdirectories
