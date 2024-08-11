@@ -34,7 +34,7 @@ $(OBJ_DIR)/$(1): $(BUILD)
 endef
 
 define compile_subdir
-$(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(OBJ_DIR)/$(1)
+$(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(MKSUBDIRS)
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
 
@@ -42,13 +42,13 @@ endef
 $(foreach build_dir, $(BUILD_DIRS), \
 	$(eval $(call make_build_dir,$(build_dir))))
 
-$(YACC_OBJ): $(YACC_INPUT) $(BUILD)/gen
+$(YACC_OBJ): $(YACC_INPUT) $(BUILD)/gen $(MKSUBDIRS)
 	cp -v src/grammar/ast.h $(BUILD)/gen
 	cd $(BUILD)/gen && $(YACC) $(YACC_FLAGS) $<
 	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/y.tab.c
 
-$(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD)/gen
-	cd $(BUILD)/gen && $(FLEX) $<
+$(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD)/gen $(MKSUBDIRS)
+	cd $(BUILD)/gen && $(FLEX) $(FLEX_FLAGS) $<
 	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
 
 .PHONY: $(LIBUTILS)
