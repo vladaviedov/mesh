@@ -33,6 +33,12 @@ run_flags copy_flags(const run_flags *flags) {
 
 void del_flags(run_flags *flags) {
 	vec_deinit(&flags->redirs);
+
+	// I don't like this
+	for (uint32_t i = 0; i < flags->assigns.count; i++) {
+		const assign *item = vec_at(&flags->assigns, i);
+		free(item->value);
+	}
 	vec_deinit(&flags->assigns);
 }
 

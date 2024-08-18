@@ -23,6 +23,7 @@
 #include "../util/helper.h"
 #include "flags.h"
 #include "run.h"
+#include "vars.h"
 
 // Track quote state
 typedef enum {
@@ -189,7 +190,19 @@ static int eval_run(ast_node *run, run_flags *flags) {
 		return eval_run(run->right, flags);
 	}
 	if (type == AST_RUN_SHELL_ENV) {
-		print_warning("shell env not implemented\n");
+		run_flags set_var_flags = {
+			.redirs = vec_init(sizeof(redir)),
+			.assigns = vec_init(sizeof(assign)),
+		};
+
+		to_flags(run->left, &set_var_flags);
+		for (uint32_t i = 0; i < set_var_flags.assigns.count; i++) {
+			const assign *var_assign = vec_at(&set_var_flags.assigns, i);
+			vars_set(var_assign->key, var_assign->value);
+		}
+
+		del_flags(&set_var_flags);
+
 		return 0;
 	}
 
