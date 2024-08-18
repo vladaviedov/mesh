@@ -25,6 +25,7 @@
 // These values are correct on Linux and BSD variants
 #ifdef _DIRENT_HAVE_D_TYPE
 #define DT_UNKNOWN 0
+#define DT_LNK 10
 #define DT_REG 8
 #endif // _DIRENT_HAVE_D_TYPE
 
@@ -52,6 +53,7 @@ int store_load(const char *path) {
 		// Using d_type allows us to skip a stat on OS/FS that support it
 		switch (item->d_type) {
 		case DT_REG:
+		case DT_LNK:
 			skip_stat = 1;
 			break;
 		case DT_UNKNOWN:
@@ -69,7 +71,7 @@ int store_load(const char *path) {
 			struct stat file_info;
 			stat(full_path, &file_info);
 
-			if (!S_ISREG(file_info.st_mode)) {
+			if (!S_ISREG(file_info.st_mode) && !S_ISLNK(file_info.st_mode)) {
 				continue;
 			}
 		}
