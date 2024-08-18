@@ -33,7 +33,7 @@
 #define PID_STR_MAX_LEN 32
 
 #ifndef MESH_VERSION
-#define MESH_VERSION "0.2.0"
+#define MESH_VERSION "0.3.0"
 #endif
 
 void run_from_stream(FILE *stream);
