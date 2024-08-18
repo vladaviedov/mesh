@@ -115,6 +115,7 @@ int exec_subshell(const char *cmd, int fd_pipe_out) {
 
 		// Write command to stdin
 		write(stdin_pipe[1], cmd, strlen(cmd));
+		close(stdin_pipe[1]);
 
 		// Redirect stdout to pipe
 		close(STDOUT_FILENO);
