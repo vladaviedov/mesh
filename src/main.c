@@ -109,19 +109,22 @@ void run_from_stream(FILE *stream) {
 		print_error("cannot read commands from this source\n");
 		exit(1);
 	case NRL_ERR_SYS:
-		if (errno != EINTR) {
-			// Clear line on EOF in interactive mode
-			if (stream == stdin) {
-				putchar('\n');
-			}
-
-			exit(0);
+		if (stream == stdin) {
+			putchar('\n');
 		}
-		break;
+
+		exit(0);
 	case NRL_ERR_EMPTY:
 		break;
 	case NRL_ERR_OK:
-		last_result = process_cmd(input);
+		// Hacky fix for nanorl 1.0 design flaw
+		// Will be revorked in later versions
+		if (errno == EAGAIN || errno == EINTR) {
+			errno = 0;
+			last_result = 2;
+		} else {
+			last_result = process_cmd(input);
+		}
 		break;
 	}
 
