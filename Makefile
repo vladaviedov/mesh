@@ -1,9 +1,10 @@
 export PWD=$(shell pwd)
 export BUILD=$(PWD)/build
 export MAN_DIR=$(BUILD)/share/man/man1
+export VERSION='"$(shell git describe --tags --dirty)"'
 
 export CC=gcc
-export CFLAGS=-I$(BUILD)/include -std=c99
+export CFLAGS=-I$(BUILD)/include -std=c99 -DMESH_VERSION=$(VERSION)
 export CFLAGS_RELEASE=-O2
 export CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
 export CFLAGS_GEN=-D_POSIX_C_SOURCE=200809L

@@ -32,7 +32,9 @@
 
 #define PID_STR_MAX_LEN 32
 
-#define MESH_VER "0.3.0"
+#ifndef MESH_VERSION
+#define MESH_VERSION "0.2.0"
+#endif
 
 void run_from_stream(FILE *stream);
 static void set_vars(void);
@@ -52,7 +54,7 @@ int main(int argc, char **argv) {
 		if (argv[1][0] == '-') {
 			if (strcmp(argv[1], "--version") == 0
 				|| strcmp(argv[1], "-v") == 0) {
-				printf("mesh version %s\n", MESH_VER);
+				printf("mesh version %s\n", MESH_VERSION);
 				return 0;
 			}
 			if (strcmp(argv[1], "-c") == 0) {
