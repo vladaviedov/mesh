@@ -140,7 +140,7 @@ void run_from_stream(FILE *stream) {
  */
 static void set_vars(void) {
 	// Load environment
-	extern const char **environ;
+	extern char **environ;
 	vars_import(environ);
 
 	// Prompts

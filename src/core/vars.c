@@ -33,7 +33,7 @@ static uint32_t export_count = 0;
 static char *sh_var_to_string(const sh_var *var);
 static sh_var *find_sh_var(const char *key, uint32_t *index);
 
-void vars_import(const char **env) {
+void vars_import(char *const *env) {
 	// Reset env vars if populated
 	if (env_vars != NULL) {
 		vec_delete(env_vars);

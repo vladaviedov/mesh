@@ -13,7 +13,7 @@
  *
  * @param[in] env - Imported null-terminated environment list.
  */
-void vars_import(const char **env);
+void vars_import(char *const *env);
 
 /**
  * @brief Export environment variables.
