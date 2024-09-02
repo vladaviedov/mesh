@@ -20,10 +20,9 @@ typedef vector store_item_vector;
 /**
  * @brief Load store from disk.
  *
- * @param[in] path - Base filepath for stored contexts.
  * @return 0 on success; -1 on failure.
  */
-int store_load(const char *path);
+int store_load(void);
 
 /**
  * @brief Get store item by name.

@@ -19,6 +19,7 @@
 
 #include "../core/exec.h"
 #include "../core/vars.h"
+#include "../util/fs.h"
 #include "../util/helper.h"
 #include "context.h"
 #include "store.h"
@@ -490,22 +491,19 @@ static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
 	for (uint32_t i = 1; i < argc; i++) {
 		const store_item *item = store_get(argv[i]);
 
-		char *filepath;
+		char *path;
 		if (item == NULL) {
-			char *config = config_path();
-			char *no_ext = path_combine(config, argv[i]);
+			path = fs_path_malloc();
+			strcpy(path, fs_conf_ctx());
 
-			filepath = malloc(sizeof(char) * (strlen(no_ext) + 5));
-			sprintf(filepath, "%s%s", no_ext, CTX_EXT);
-
-			free(no_ext);
-			free(config);
+			fs_path_cat(path, argv[i]);
+			strcat(path, CTX_EXT);
 		} else {
-			filepath = item->filename;
+			path = item->filename;
 		}
 
 		export_argv[1] = argv[i];
-		export_argv[2] = filepath;
+		export_argv[2] = path;
 
 		int res = meta_ctx_export(3, export_argv, command);
 
@@ -513,16 +511,16 @@ static int meta_store_save(uint32_t argc, char **argv, unused char **command) {
 			fprintf(stderr, "failed to save '%s'\n", argv[i]);
 
 			if (item == NULL) {
-				free(filepath);
+				free(path);
 			}
 
 			return res;
 		}
 
-		printf("saved '%s' as '%s'\n", argv[i], filepath);
+		printf("saved '%s' as '%s'\n", argv[i], path);
 
 		if (item == NULL) {
-			free(filepath);
+			free(path);
 		}
 	}
 
@@ -576,10 +574,7 @@ static int meta_store_reload(
 		return -1;
 	}
 
-	char *path = config_path();
-	int res = store_load(path);
-	free(path);
-	return res;
+	return store_load();
 }
 
 /** Internal commands */

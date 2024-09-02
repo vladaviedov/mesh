@@ -16,13 +16,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../core/vars.h"
-
 #define FATAL_PREFIX "FATAL: "
 #define ERROR_PREFIX "mesh: "
 #define WARNING_PREFIX "warning: "
-
-#define CONFIG_PATH ".config/mesh/"
 
 char null_char = '\0';
 static const char *const *argv0 = NULL;
@@ -107,26 +103,4 @@ static int try_fd_reset(void) {
 	}
 
 	return 0;
-}
-
-char *config_path(void) {
-	return path_combine(vars_get("HOME"), CONFIG_PATH);
-}
-
-char *path_combine(const char *path1, const char *path2) {
-	int end_slash = (path1[strlen(path1) - 1] == '/');
-
-	uint32_t combined_size = strlen(path1) + strlen(path2) + 1;
-	if (!end_slash) {
-		combined_size++;
-	}
-
-	char *combined = malloc(sizeof(char) * combined_size);
-	if (!end_slash) {
-		snprintf(combined, combined_size, "%s/%s", path1, path2);
-	} else {
-		snprintf(combined, combined_size, "%s%s", path1, path2);
-	}
-
-	return combined;
 }

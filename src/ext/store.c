@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "../util/fs.h"
 #include "../util/helper.h"
 
 #define REQ_DIRECT "#:name "
@@ -31,7 +32,42 @@
 
 static store_item_vector *store_list = NULL;
 
-int store_load(const char *path) {
+static int load_directory(char *path);
+
+int store_load(void) {
+	char *ctx_path = fs_path_malloc();
+	strcpy(ctx_path, fs_conf_ctx());
+	int res = load_directory(ctx_path);
+
+	free(ctx_path);
+	return res;
+}
+
+const store_item *store_get(const char *name) {
+	if (store_list == NULL) {
+		store_load();
+	}
+
+	// TODO: replace with better search
+	for (uint32_t i = 0; i < store_list->count; i++) {
+		const store_item *item = vec_at(store_list, i);
+		if (strcmp(item->name, name) == 0) {
+			return item;
+		}
+	}
+
+	return NULL;
+}
+
+const store_item_vector *store_get_list(void) {
+	if (store_list == NULL) {
+		store_load();
+	}
+
+	return store_list;
+}
+
+static int load_directory(char *path) {
 	if (store_list != NULL) {
 		vec_delete(store_list);
 	}
@@ -39,8 +75,16 @@ int store_load(const char *path) {
 
 	DIR *store_dir = opendir(path);
 	if (store_dir == NULL) {
-		print_error("cannot open '%s': %s\n", path, strerror(errno));
-		return -1;
+		if (fs_mkdir_p(path) < 0) {
+			print_error("cannot create '%s': %s\n", path, strerror(errno));
+			return -1;
+		}
+
+		store_dir = opendir(path);
+		if (store_dir < 0) {
+			print_error("cannot access '%s': %s\n", path, strerror(errno));
+			return -1;
+		}
 	}
 
 	int has_error = 0;
@@ -64,12 +108,12 @@ int store_load(const char *path) {
 #endif // _DIRENT_HAVE_D_TYPE
 
 		// Make full path
-		char *full_path = path_combine(path, item->d_name);
+		fs_path_cat(path, item->d_name);
 
 		// Portable implementation
 		if (!skip_stat) {
 			struct stat file_info;
-			stat(full_path, &file_info);
+			stat(path, &file_info);
 
 			if (!S_ISREG(file_info.st_mode) && !S_ISLNK(file_info.st_mode)) {
 				continue;
@@ -77,9 +121,9 @@ int store_load(const char *path) {
 		}
 
 		// Peek into file
-		FILE *fp = fopen(full_path, "r");
+		FILE *fp = fopen(path, "r");
 		if (fp == NULL) {
-			print_error("failed to load '%s'. skipping...\n", full_path);
+			print_error("failed to load '%s'. skipping...\n", path);
 			has_error = 1;
 			continue;
 		}
@@ -87,7 +131,7 @@ int store_load(const char *path) {
 		char *line = NULL;
 		size_t _;
 		if (getline(&line, &_, fp) <= 0) {
-			print_error("failed to open '%s'. skipping...\n", full_path);
+			print_error("failed to open '%s'. skipping...\n", path);
 			fclose(fp);
 			has_error = 1;
 			continue;
@@ -100,20 +144,20 @@ int store_load(const char *path) {
 		}
 
 		if (strncmp(line, REQ_DIRECT, strlen(REQ_DIRECT)) != 0) {
-			print_error("'%s' has a bad header. skipping...\n", full_path);
+			print_error("'%s' has a bad header. skipping...\n", path);
 			has_error = 1;
 			goto next_file;
 		}
 
 		char *name = line + strlen(REQ_DIRECT);
 		if (name[0] == '_') {
-			print_error("'%s' has a reserved name. skipping...\n", full_path);
+			print_error("'%s' has a reserved name. skipping...\n", path);
 			has_error = 1;
 			goto next_file;
 		}
 
 		store_item s = {
-			.filename = full_path,
+			.filename = path,
 			.name = strdup(name),
 		};
 
@@ -126,32 +170,4 @@ next_file:
 
 	closedir(store_dir);
 	return has_error ? -1 : 0;
-}
-
-const store_item *store_get(const char *name) {
-	if (store_list == NULL) {
-		char *path = config_path();
-		store_load(path);
-		free(path);
-	}
-
-	// TODO: replace with better search
-	for (uint32_t i = 0; i < store_list->count; i++) {
-		const store_item *item = vec_at(store_list, i);
-		if (strcmp(item->name, name) == 0) {
-			return item;
-		}
-	}
-
-	return NULL;
-}
-
-const store_item_vector *store_get_list(void) {
-	if (store_list == NULL) {
-		char *path = config_path();
-		store_load(path);
-		free(path);
-	}
-
-	return store_list;
 }

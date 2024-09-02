@@ -71,20 +71,3 @@ void print_warning(const char *format, ...);
  * @param[in] vec - Vector object.
  */
 void free_elements(vector *vec);
-
-/**
- * @brief Get mesh config path.
- *
- * @return Config absolute filepath.
- * @return Allocated return value.
- */
-char *config_path(void);
-
-/**
- * @brief Combine two parts together.
- *
- * @param[in] path1 - First part.
- * @param[in] path2 - Second part.
- * @return Allocated return value.
- */
-char *path_combine(const char *path1, const char *path2);
