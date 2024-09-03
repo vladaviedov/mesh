@@ -81,7 +81,7 @@ static int load_directory(char *path) {
 		}
 
 		store_dir = opendir(path);
-		if (store_dir < 0) {
+		if (store_dir == NULL) {
 			print_error("cannot access '%s': %s\n", path, strerror(errno));
 			return -1;
 		}
