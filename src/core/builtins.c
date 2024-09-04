@@ -22,24 +22,19 @@
 #include "../util/error.h"
 #include "vars.h"
 
-#define CODE_OK 0
-#define CODE_GEN_ERROR 1
-#define CODE_USAGE_ERROR 2
-#define CODE_EXIT_ERROR 128
-
 // Builtin table entry
 // Note: typedef in header
 struct builtin {
 	const char *name;
-	int (*const func)(uint32_t argc, char **argv);
+	cmd_res (*const func)(uint32_t argc, char **argv);
 };
 
 // Builtin functions
-static int shell_exit(uint32_t argc, char **argv);
-static int shell_cd(uint32_t argc, char **argv);
-static int shell_set(uint32_t argc, char **argv);
-static int shell_export(uint32_t argc, char **argv);
-static int shell_exec(uint32_t argc, char **argv);
+static cmd_res shell_exit(uint32_t argc, char **argv);
+static cmd_res shell_cd(uint32_t argc, char **argv);
+static cmd_res shell_set(uint32_t argc, char **argv);
+static cmd_res shell_export(uint32_t argc, char **argv);
+static cmd_res shell_exec(uint32_t argc, char **argv);
 
 // Builtin registry
 static const builtin registry[] = {
@@ -83,10 +78,10 @@ int run_builtin(const builtin *cmd, string_vector *args) {
 
 /** Builtin implementations */
 
-static int shell_exit(uint32_t argc, char **argv) {
+static cmd_res shell_exit(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("exit: too many arguments\n");
-		return CODE_USAGE_ERROR;
+		return CMDRES_USAGE;
 	}
 
 	if (argc == 2) {
@@ -96,7 +91,7 @@ static int shell_exit(uint32_t argc, char **argv) {
 		// If string is not only numbers
 		if (*end != '\0') {
 			print_error("exit: invalid exit code '%s'\n", argv[1]);
-			return CODE_EXIT_ERROR;
+			return CMDRES_EXIT;
 		}
 
 		exit(code);
@@ -105,10 +100,10 @@ static int shell_exit(uint32_t argc, char **argv) {
 	exit(EXIT_SUCCESS);
 }
 
-static int shell_cd(uint32_t argc, char **argv) {
+static cmd_res shell_cd(uint32_t argc, char **argv) {
 	if (argc > 2) {
 		print_error("cd: too many arguments\n");
-		return CODE_USAGE_ERROR;
+		return CMDRES_USAGE;
 	}
 
 	// Get target path
@@ -116,7 +111,7 @@ static int shell_cd(uint32_t argc, char **argv) {
 	if (strcmp(path, "-") == 0) {
 		if ((path = vars_get("OLDPWD")) == NULL) {
 			print_error("cd: nowhere to go\n");
-			return CODE_GEN_ERROR;
+			return CMDRES_GENERAL;
 		}
 
 		printf("%s\n", path);
@@ -124,7 +119,7 @@ static int shell_cd(uint32_t argc, char **argv) {
 
 	if (chdir(path) < 0) {
 		print_error("cd: %s: %s\n", path, strerror(errno));
-		return CODE_GEN_ERROR;
+		return CMDRES_GENERAL;
 	}
 
 	// Update vars
@@ -133,33 +128,33 @@ static int shell_cd(uint32_t argc, char **argv) {
 	vars_set("PWD", pwd);
 	free(pwd);
 
-	return CODE_OK;
+	return CMDRES_OK;
 }
 
-static int shell_set(uint32_t argc, char **argv) {
+static cmd_res shell_set(uint32_t argc, char **argv) {
 	if (argc > 1) {
 		// TODO: implement
 		print_error("set: this function is not implemented");
-		return CODE_USAGE_ERROR;
+		return CMDRES_USAGE;
 	}
 
 	vars_print_all(0);
-	return CODE_OK;
+	return CMDRES_OK;
 }
 
-static int shell_export(uint32_t argc, char **argv) {
+static cmd_res shell_export(uint32_t argc, char **argv) {
 	if (argc == 1) {
 		vars_print_all(1);
-		return CODE_OK;
+		return CMDRES_OK;
 	}
 
 	pure_assign(argc - 1, argv + 1, 1);
-	return CODE_OK;
+	return CMDRES_OK;
 }
 
-static int shell_exec(uint32_t argc, char **argv) {
+static cmd_res shell_exec(uint32_t argc, char **argv) {
 	if (argc == 1) {
-		return CODE_OK;
+		return CMDRES_OK;
 	}
 
 	extern char **environ;
@@ -173,5 +168,5 @@ static int shell_exec(uint32_t argc, char **argv) {
 	execvp(exec_argv[0], exec_argv);
 
 	print_error("exec: %s: command not found\n", exec_argv[0]);
-	return CODE_GEN_ERROR;
+	return CMDRES_GENERAL;
 }

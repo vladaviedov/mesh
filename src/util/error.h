@@ -10,6 +10,14 @@
 
 #include "helper.h"
 
+// Built-in and meta exit codes
+typedef enum {
+	CMDRES_OK = 0,
+	CMDRES_GENERAL = 1,
+	CMDRES_USAGE = 2,
+	CMDRES_EXIT = 128,
+} cmd_res;
+
 /**
  * @brief Print shell fatal message and exit.
  *
