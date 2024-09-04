@@ -17,15 +17,13 @@
 #include <c-utils/vector.h>
 
 #include "core/eval.h"
-#include "core/run.h"
 #include "core/scope.h"
 #include "core/vars.h"
 #include "ext/context.h"
-#include "ext/meta.h"
 #include "grammar/ast.h"
 #include "grammar/expand.h"
 #include "grammar/parse.h"
-#include "util/helper.h"
+#include "util/error.h"
 
 #define PS1_ROOT "# "
 #define PS1_USER "$ "

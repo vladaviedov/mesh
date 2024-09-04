@@ -23,7 +23,7 @@
 #include "../core/scope.h"
 #include "../core/vars.h"
 #include "../ext/context.h"
-#include "../util/helper.h"
+#include "../util/error.h"
 
 #define RD_BUF_LEN 1024
 

@@ -20,7 +20,7 @@
 
 #include "../grammar/ast.h"
 #include "../grammar/expand.h"
-#include "../util/helper.h"
+#include "../util/error.h"
 #include "flags.h"
 #include "run.h"
 #include "vars.h"

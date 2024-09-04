@@ -21,6 +21,7 @@
 #include "../grammar/ast.h"
 #include "../grammar/parse.h"
 #include "../util/helper.h"
+#include "../util/error.h"
 #include "builtins.h"
 #include "eval.h"
 #include "exec.h"

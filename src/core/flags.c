@@ -15,7 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../util/helper.h"
+#include "../util/error.h"
 #include "scope.h"
 #include "vars.h"
 

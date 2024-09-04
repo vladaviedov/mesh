@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-#include "../util/helper.h"
+#include "../util/error.h"
 #include "ast.h"
 
 // Needed to interface with Flex & Yacc

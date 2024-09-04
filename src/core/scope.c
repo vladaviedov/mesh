@@ -17,7 +17,7 @@
 #include <c-utils/stack.h>
 #include <c-utils/vector.h>
 
-#include "../util/helper.h"
+#include "../util/error.h"
 
 typedef union {
 	char *name;

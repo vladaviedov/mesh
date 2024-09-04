@@ -19,6 +19,7 @@
 #include <c-utils/vector.h>
 
 #include "../util/helper.h"
+#include "../util/error.h"
 #include "vars.h"
 
 #define CODE_OK 0

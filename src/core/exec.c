@@ -19,7 +19,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../util/helper.h"
+#include "../util/error.h"
 #include "flags.h"
 #include "vars.h"
 

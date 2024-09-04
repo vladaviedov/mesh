@@ -21,6 +21,7 @@
 #include "../core/vars.h"
 #include "../util/fs.h"
 #include "../util/helper.h"
+#include "../util/error.h"
 #include "context.h"
 #include "store.h"
 
