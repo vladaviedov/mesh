@@ -17,8 +17,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "../util/fs.h"
 #include "../util/error.h"
+#include "../util/fs.h"
 
 #define REQ_DIRECT "#:name "
 

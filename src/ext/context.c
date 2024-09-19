@@ -14,8 +14,8 @@
 
 #include <c-utils/vector.h>
 
-#include "../util/helper.h"
 #include "../util/error.h"
+#include "../util/helper.h"
 
 static context_vector *contexts = NULL;
 static context *current_ctx = NULL;
