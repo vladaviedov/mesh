@@ -157,7 +157,7 @@ static int load_directory(char *path) {
 		}
 
 		store_item s = {
-			.filename = path,
+			.filename = strdup(path),
 			.name = strdup(name),
 		};
 
