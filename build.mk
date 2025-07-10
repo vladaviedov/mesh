@@ -22,6 +22,13 @@ YACC_OBJ=$(OBJ_DIR)/grammar/y.tab.o
 .PHONY: build
 build: $(BUILD) $(TARGET)
 
+.PHONY: install
+install:
+	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
+	cp $(TARGET) $(PREFIX)/bin
+	# gzip -c $(MAN_PAGE) > $(PREFIX)/share/man/man1/mesh.1.gz
+
+
 # Templates
 define make_build_dir
 $(1):

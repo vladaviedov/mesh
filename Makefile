@@ -40,9 +40,7 @@ debug:
 
 .PHONY: install
 install:
-	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
-	cp $(TARGET) $(PREFIX)/bin
-	# gzip -c $(MAN_PAGE) > $(PREFIX)/share/man/man1/mesh.1.gz
+	$(MAKE) -f $(BUILD_MK) install
 
 .PHONY: clean
 clean:
