@@ -1,3 +1,6 @@
 [submodule "lib/c-utils"]
 	path = lib/c-utils
 	url = https://github.com/vladaviedov/c-utils
+[submodule "lib/nanorl"]
+	path = lib/nanorl
+	url = https://github.com/vladaviedov/nanorl
