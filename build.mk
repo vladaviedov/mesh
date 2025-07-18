@@ -1,5 +1,6 @@
-LIBUTILS_CONFIG=$(PWD)/lib/libutils.conf
+LIBUTILS_CONFIG="$(PWD)/lib/libutils.conf $(PWD)/lib/nanorl/lib/libutils.conf"
 LIBUTILS=$(BUILD)/lib/libutils.a
+LIBNRL=$(BUILD)/lib/libnanorl.a
 
 BUILD_DIRS=$(BUILD) \
 		   $(BUILD)/lib \
@@ -41,7 +42,7 @@ $(OBJ_DIR)/$(1): $(BUILD)
 endef
 
 define compile_subdir
-$(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(MKSUBDIRS)
+$(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(LIBUTILS) $(LIBNRL) $(MKSUBDIRS)
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
 
@@ -58,13 +59,16 @@ $(FLEX_OBJ): $(FLEX_INPUT) $(YACC_OBJ) $(BUILD)/gen $(MKSUBDIRS)
 	cd $(BUILD)/gen && $(FLEX) $(FLEX_FLAGS) $<
 	$(CC) $(CFLAGS_GEN) $(CFLAGS) -w -c -o $@ $(BUILD)/gen/lex.yy.c
 
-.PHONY: $(LIBUTILS)
 $(LIBUTILS): lib/c-utils
 	$(MAKE) -C $< $(TASK) \
 		CONFIG_PATH=$(LIBUTILS_CONFIG) \
 		BUILD=$(BUILD)
 
-$(TARGET): $(BUILD) $(LIBUTILS) $(OBJS) $(YACC_OBJ) $(FLEX_OBJ)
+$(LIBNRL): lib/nanorl $(LIBUTILS)
+	$(MAKE) -C $< $(TASK) \
+		BUILD=$(BUILD)
+
+$(TARGET): $(BUILD) $(LIBUTILS) $(LIBNRL) $(OBJS) $(YACC_OBJ) $(FLEX_OBJ)
 	$(CC) -o $@ $(OBJS) $(YACC_OBJ) $(FLEX_OBJ) $(LDFLAGS)
 
 # Build root

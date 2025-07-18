@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <c-utils/nanorl.h>
+#include <nanorl/nanorl.h>
 #include <c-utils/vector.h>
 
 #include "../core/exec.h"
@@ -119,18 +119,20 @@ int run_meta(const meta *cmd, string_vector *args, char **command) {
 
 static int meta_add(uint32_t argc, char **argv, unused char **command) {
 	if (argc == 1) {
+		nrl_config config = nrl_default_config();
 		nrl_error err;
-		char *input = nanorl("", &err);
+		char *input = nanorl(&config, &err);
 
 		switch (err) {
-		case NRL_ERR_SYS:
-		case NRL_ERR_BAD_FD:
+		case NRL_ERROR_SYSTEM: // fallthrough
+		case NRL_ERROR_ARG:
 			print_error("failed to get input\n");
 			return -1;
-		case NRL_ERR_EMPTY:
+		case NRL_ERROR_INTERRUPT: // fallthrough
+		case NRL_ERROR_EOF:
 			print_warning("no input given\n");
 			return -1;
-		case NRL_ERR_OK:
+		case NRL_ERROR_OK:
 			return context_add(input, NULL);
 		}
 	}
@@ -158,18 +160,23 @@ static int meta_replace(uint32_t argc, char **argv, unused char **command) {
 	}
 
 	if (argc == 2) {
+		nrl_config config = nrl_default_config();
+		char *const *current = vec_at(&context_get(NULL)->commands, item);
+		config.preload = *current;
+
 		nrl_error err;
-		char *input = nanorl("", &err);
+		char *input = nanorl(&config, &err);
 
 		switch (err) {
-		case NRL_ERR_SYS:
-		case NRL_ERR_BAD_FD:
+		case NRL_ERROR_SYSTEM: // fallthrough
+		case NRL_ERROR_ARG:
 			print_error("failed to get input\n");
 			return -1;
-		case NRL_ERR_EMPTY:
+		case NRL_ERROR_INTERRUPT: // fallthrough
+		case NRL_ERROR_EOF:
 			print_warning("no input given\n");
 			return -1;
-		case NRL_ERR_OK:
+		case NRL_ERROR_OK:
 			return context_replace(input, item, NULL);
 		}
 	}

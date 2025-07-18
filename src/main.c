@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <c-utils/nanorl.h>
+#include <nanorl/nanorl.h>
 #include <c-utils/vector.h>
 
 #include "core/eval.h"
@@ -100,29 +100,28 @@ int main(int argc, char **argv) {
 void run_from_stream(FILE *stream) {
 	int last_result = 0;
 
+	nrl_config config = nrl_default_config();
+	config.prompt = vars_get("PS1");
+
 	nrl_error err;
-	char *input = nanorl(vars_get("PS1"), &err);
+	char *input = nanorl(&config, &err);
+
 	switch (err) {
-	case NRL_ERR_BAD_FD:
-		print_error("cannot read commands from this source\n");
-		exit(1);
-	case NRL_ERR_SYS:
+	case NRL_ERROR_INTERRUPT:
+		last_result = 2;
+		break;
+	case NRL_ERROR_SYSTEM:
 		if (stream == stdin) {
 			putchar('\n');
 		}
-
+		exit(1);	
+	case NRL_ERROR_EOF: // fallthrough
 		exit(0);
-	case NRL_ERR_EMPTY:
+	case NRL_ERROR_ARG:
+		print_error("invalid line editor arguments: shouldn't happen");
 		break;
-	case NRL_ERR_OK:
-		// Hacky fix for nanorl 1.0 design flaw
-		// Will be revorked in later versions
-		if (errno == EAGAIN || errno == EINTR) {
-			errno = 0;
-			last_result = 2;
-		} else {
-			last_result = process_cmd(input);
-		}
+	case NRL_ERROR_OK:
+		last_result = process_cmd(input);
 		break;
 	}
 

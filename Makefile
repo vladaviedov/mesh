@@ -8,7 +8,7 @@ export CFLAGS=-I$(BUILD)/include -std=c99 -DMESH_VERSION=$(VERSION)
 export CFLAGS_RELEASE=-O2 -w
 export CFLAGS_DEBUG=-Wall -Wextra -g -DDEBUG=1
 export CFLAGS_GEN=-D_POSIX_C_SOURCE=200809L
-export LDFLAGS=-L$(BUILD)/lib -lutils
+export LDFLAGS=-L$(BUILD)/lib -lutils $(BUILD)/lib/libnanorl.a
 
 export FLEX=flex
 export FLEX_FLAGS=
