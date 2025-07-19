@@ -15,6 +15,9 @@ IncludeCategories:
   - Regex: '^<c-utils/'
     Priority: 2
     CaseSensitive: true
+  - Regex: '^<nanorl/'
+    Priority: 2
+    CaseSensitive: true
   - Regex: '^<.*'
     Priority: 1
     CaseSensitive: true
