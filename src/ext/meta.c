@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nanorl/nanorl.h>
 #include <c-utils/vector.h>
+#include <nanorl/nanorl.h>
 
 #include "../core/exec.h"
 #include "../core/vars.h"

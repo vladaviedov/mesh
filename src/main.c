@@ -13,13 +13,14 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <nanorl/nanorl.h>
 #include <c-utils/vector.h>
+#include <nanorl/nanorl.h>
 
 #include "core/eval.h"
 #include "core/scope.h"
 #include "core/vars.h"
 #include "ext/context.h"
+#include "ext/nrlcustom.h"
 #include "grammar/ast.h"
 #include "grammar/expand.h"
 #include "grammar/parse.h"
@@ -34,6 +35,8 @@
 #define MESH_VERSION "0.3.0"
 #endif
 
+static nrl_config main_prompt;
+
 void run_from_stream(FILE *stream);
 static void set_vars(void);
 static void run_script(const char *filename);
@@ -44,6 +47,8 @@ int main(int argc, char **argv) {
 
 	set_vars();
 	scope_init();
+	main_prompt = nrl_default_config();
+	nrlcustom_register(&main_prompt);
 
 	context_hist_init();
 	context_select("history");
@@ -100,11 +105,10 @@ int main(int argc, char **argv) {
 void run_from_stream(FILE *stream) {
 	int last_result = 0;
 
-	nrl_config config = nrl_default_config();
-	config.prompt = vars_get("PS1");
-
+	main_prompt.prompt = vars_get("PS1");
 	nrl_error err;
-	char *input = nanorl(&config, &err);
+	char *input = nanorl(&main_prompt, &err);
+	nrlcustom_reset();
 
 	switch (err) {
 	case NRL_ERROR_INTERRUPT:
@@ -114,7 +118,7 @@ void run_from_stream(FILE *stream) {
 		if (stream == stdin) {
 			putchar('\n');
 		}
-		exit(1);	
+		exit(1);
 	case NRL_ERROR_EOF: // fallthrough
 		exit(0);
 	case NRL_ERROR_ARG:
