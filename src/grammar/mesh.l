@@ -17,12 +17,13 @@ alpha [a-zA-z]
 symbol [-\.\+\$\/?:~=]
 separator [ \t]
 escaped \\.
+uc [\x80-\xbf\xc2-\xf4]
 
 single_quoted '({escaped}|[^'\\])*'
 double_quoted \"({escaped}|[^"\\])*\"
 
 alphanum {digit}|{alpha}
-word {alphanum}|{symbol}|{single_quoted}|{double_quoted}|{escaped}
+word {alphanum}|{symbol}|{single_quoted}|{double_quoted}|{escaped}|{uc}
 
 %%
 
